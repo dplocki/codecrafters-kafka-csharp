@@ -30,7 +30,6 @@ var clientRequestMessage = await ParseClientRequestMessage(stream);
 
 var response = new ServerResponseMessage()
 {
-    MessageSize = 0,
     CorrelationId = clientRequestMessage.CorrelationId,
     Error = clientRequestMessage.RequestApiVersion != 4
         ? 35
@@ -50,15 +49,16 @@ struct ClientRequestMessage
 
 struct ServerResponseMessage
 {
-    public int MessageSize;
     public int CorrelationId;
 
     public short? Error;
 
     public readonly byte[] ToMessage()
     {
-        var responseHeaderBuffer = new byte[Error.HasValue ? 10 : 8];
-        BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(0, 4), MessageSize);
+        var messageSize = Error.HasValue ? 10 : 8;
+        var responseHeaderBuffer = new byte[messageSize];
+
+        BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(0, 4), messageSize);
         BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(4, 4), CorrelationId);
 
         if (Error.HasValue) {
