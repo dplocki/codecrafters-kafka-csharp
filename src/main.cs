@@ -5,11 +5,11 @@ using System.Net.Sockets;
 async static Task<ClientRequestMessage> ParseClientRequestMessage(Stream stream)
 {
     var buffer = new byte[12];
+    var messageSize = BinaryPrimitives.ReadInt32BigEndian(buffer.AsSpan(0, 4));
 
     await stream.ReadAsync(buffer);
     return new ClientRequestMessage()
     {
-        MessageSize = BinaryPrimitives.ReadInt32BigEndian(buffer.AsSpan(0, 4)),
         RequestApiKey = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(4, 2)),
         RequestApiVersion = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(6, 2)),
         CorrelationId = BinaryPrimitives.ReadInt32BigEndian(buffer.AsSpan(8, 4))
@@ -41,7 +41,6 @@ await stream.FlushAsync();
 
 struct ClientRequestMessage
 {
-    public int MessageSize;
     public int RequestApiKey;
     public int RequestApiVersion;
     public int CorrelationId;
