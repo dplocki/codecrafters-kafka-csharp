@@ -27,13 +27,10 @@ Console.WriteLine("Client connected!");
 
 var stream = client.GetStream();
 var clientRequestMessage = await ParseClientRequestMessage(stream);
-
 var response = new ServerResponseMessage()
 {
     CorrelationId = clientRequestMessage.CorrelationId,
-    Error = clientRequestMessage.RequestApiVersion != 4
-        ? 35
-        : null,
+    Error = (clientRequestMessage.RequestApiVersion != 4) ? (short)35 : (short)0,
 };
 
 await stream.WriteAsync(response.ToMessage());
@@ -50,19 +47,16 @@ struct ServerResponseMessage
 {
     public int CorrelationId;
 
-    public short? Error;
+    public short Error;
 
     public readonly byte[] ToMessage()
     {
-        var messageSize = Error.HasValue ? 10 : 8;
+        var messageSize = 10;
         var responseHeaderBuffer = new byte[messageSize];
 
         BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(0, 4), messageSize);
         BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(4, 4), CorrelationId);
-
-        if (Error.HasValue) {
-            BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(8, 2), Error.Value);
-        }
+        BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(8, 2), Error);
 
         return responseHeaderBuffer;
     }
