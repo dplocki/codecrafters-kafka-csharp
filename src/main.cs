@@ -7,7 +7,7 @@ async static Task<ClientRequestMessage> ParseClientRequestMessage(Stream stream)
     var buffer = new byte[12];
     var messageSize = BinaryPrimitives.ReadInt32BigEndian(buffer.AsSpan(0, 4));
 
-    await stream.ReadAsync(buffer);
+    await stream.ReadExactlyAsync(buffer);
     return new ClientRequestMessage()
     {
         RequestApiKey = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(4, 2)),
