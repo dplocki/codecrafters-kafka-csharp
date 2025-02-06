@@ -121,7 +121,7 @@ struct ServerResponseAPIVersionsMessage
             index += 2;
         }
 
-        responseBuffer[index] = 1;
+        responseBuffer[index] = 0;
         index += 1;
         BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(index, 4), 0);
         index += 4;
