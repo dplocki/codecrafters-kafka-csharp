@@ -28,7 +28,7 @@ Console.WriteLine("Client connected!");
 var stream = client.GetStream();
 var clientRequestMessage = await ParseClientRequestMessage(stream);
 
-if (clientRequestMessage.ApiVersion == 18)
+if (clientRequestMessage.ApiKey == 18)
 {
     var responseApiVersions = new ServerResponseAPIVersionsMessage()
     {
