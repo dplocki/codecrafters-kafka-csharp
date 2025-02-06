@@ -108,7 +108,7 @@ struct ServerResponseAPIVersionsMessage
         BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(8, 2), Error);
 
         var index = 10;
-        responseBuffer[index] = (byte)Items.Length;
+        responseBuffer[index] = (byte)(Items.Length + 1);
         index += 1;
 
         foreach(var item in Items)
