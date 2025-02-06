@@ -46,6 +46,7 @@ if (clientRequestMessage.ApiKey == 18)
 
     await stream.WriteAsync(responseApiVersions.ToMessage());
     await stream.FlushAsync();
+    return;
 }
 
 var response = new ServerResponseMessage()
