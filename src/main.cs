@@ -100,31 +100,31 @@ struct ServerResponseAPIVersionsMessage
 
     public readonly byte[] ToMessage()
     {
-        var messageSize = 4 + 4 + 2 + 2 + Items.Length * (2 + 2 + 4);
-        var responseHeaderBuffer = new byte[messageSize];
+        var messageSize = 4 + 4 + 2 + 2 + Items.Length * (2 + 2 + 4) + 4 + 1 + 1;
+        var responseBuffer = new byte[messageSize];
 
-        BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(0, 4), messageSize);
-        BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(4, 4), CorrelationId);
-        BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(8, 2), Error);
-        BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(10, 2), (short)Items.Length);
+        BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(0, 4), messageSize);
+        BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(4, 4), CorrelationId);
+        BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(8, 2), Error);
+        BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(10, 2), (short)Items.Length);
 
         var index = 12;
         foreach(var item in Items)
         {
-            BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(index, 2), item.ApiKey);
+            BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(index, 2), item.ApiKey);
             index += 2;
-            BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(index, 2), item.MinVersion);
+            BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(index, 2), item.MinVersion);
             index += 2;
-            BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(index, 4), item.MaxVersion);
+            BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(index, 4), item.MaxVersion);
             index += 4;
         }
 
-        BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(index, 4), 0);
+        BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(index, 4), 0);
         index += 4;
-        BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(index, 1), 1);
+        responseBuffer[index] = 1;
         index += 1;
-        BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(index, 1), 0);
+        responseBuffer[index] = 0;
 
-        return responseHeaderBuffer;
+        return responseBuffer;
     }
 }
