@@ -87,7 +87,7 @@ struct APIVersionItem
 {
     public short ApiKey;
     public short MinVersion;
-    public int MaxVersion;
+    public short MaxVersion;
 }
 
 struct ServerResponseAPIVersionsMessage
@@ -100,7 +100,7 @@ struct ServerResponseAPIVersionsMessage
 
     public readonly byte[] ToMessage()
     {
-        var messageSize = 4 + 4 + 2 + 2 + Items.Length * (2 + 2 + 4) + 4 + 1 + 1;
+        var messageSize = 4 + 4 + 2 + 2 + Items.Length * (2 + 2 + 2) + 4 + 1 + 1;
         var responseBuffer = new byte[messageSize];
 
         BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(0, 4), messageSize);
@@ -115,8 +115,8 @@ struct ServerResponseAPIVersionsMessage
             index += 2;
             BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(index, 2), item.MinVersion);
             index += 2;
-            BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(index, 4), item.MaxVersion);
-            index += 4;
+            BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(index, 2), item.MaxVersion);
+            index += 2;
         }
 
         BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(index, 4), 0);
