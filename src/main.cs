@@ -48,7 +48,6 @@ if (clientRequestMessage.ApiKey == 18)
     await stream.FlushAsync();
 }
 
-
 var response = new ServerResponseMessage()
 {
     CorrelationId = clientRequestMessage.CorrelationId,
@@ -110,7 +109,6 @@ struct ServerResponseAPIVersionsMessage
         BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(10, 2), (short)Items.Length);
 
         var index = 12;
-
         foreach(var item in Items)
         {
             BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(index, 2), item.ApiKey);
@@ -120,6 +118,12 @@ struct ServerResponseAPIVersionsMessage
             BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(index, 4), item.MaxVersion);
             index += 4;
         }
+
+        BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(index, 4), 0);
+        index += 4;
+        BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(index, 1), 1);
+        index += 1;
+        BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(index, 1), 0);
 
         return responseHeaderBuffer;
     }
