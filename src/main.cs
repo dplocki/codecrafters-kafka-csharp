@@ -10,8 +10,8 @@ async static Task<ClientRequestMessage> ParseClientRequestMessage(Stream stream)
     await stream.ReadExactlyAsync(buffer);
     return new ClientRequestMessage()
     {
-        RequestApiKey = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(4, 2)),
-        RequestApiVersion = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(6, 2)),
+        ApiKey = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(4, 2)),
+        ApiVersion = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(6, 2)),
         CorrelationId = BinaryPrimitives.ReadInt32BigEndian(buffer.AsSpan(8, 4))
     };
 }
@@ -28,7 +28,7 @@ Console.WriteLine("Client connected!");
 var stream = client.GetStream();
 var clientRequestMessage = await ParseClientRequestMessage(stream);
 
-if (clientRequestMessage.RequestApiVersion == 18)
+if (clientRequestMessage.ApiVersion == 18)
 {
     var responseApiVersions = new ServerResponseAPIVersionsMessage()
     {
@@ -52,7 +52,7 @@ if (clientRequestMessage.RequestApiVersion == 18)
 var response = new ServerResponseMessage()
 {
     CorrelationId = clientRequestMessage.CorrelationId,
-    Error = (clientRequestMessage.RequestApiVersion != 4) ? (short)35 : (short)0,
+    Error = (clientRequestMessage.ApiVersion != 4) ? (short)35 : (short)0,
 };
 
 await stream.WriteAsync(response.ToMessage());
@@ -60,8 +60,8 @@ await stream.FlushAsync();
 
 struct ClientRequestMessage
 {
-    public int RequestApiKey;
-    public int RequestApiVersion;
+    public int ApiKey;
+    public int ApiVersion;
     public int CorrelationId;
 }
 
