@@ -100,15 +100,17 @@ struct ServerResponseAPIVersionsMessage
 
     public readonly byte[] ToMessage()
     {
-        var messageSize = 4 + 4 + 2 + 2 + Items.Length * (2 + 2 + 2) + 4 + 1 + 1;
+        var messageSize = 4 + 4 + 2 + 1 + Items.Length * (2 + 2 + 2) + 1 + 4 + 1;
         var responseBuffer = new byte[messageSize];
 
         BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(0, 4), messageSize);
         BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(4, 4), CorrelationId);
         BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(8, 2), Error);
-        BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(10, 2), (short)Items.Length);
 
-        var index = 12;
+        var index = 10;
+        responseBuffer[index] = (byte)Items.Length;
+        index += 1;
+
         foreach(var item in Items)
         {
             BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(index, 2), item.ApiKey);
@@ -119,10 +121,10 @@ struct ServerResponseAPIVersionsMessage
             index += 2;
         }
 
-        BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(index, 4), 0);
-        index += 4;
         responseBuffer[index] = 1;
         index += 1;
+        BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(index, 4), 0);
+        index += 4;
         responseBuffer[index] = 0;
 
         return responseBuffer;
