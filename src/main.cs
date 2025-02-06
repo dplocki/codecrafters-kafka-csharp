@@ -103,7 +103,7 @@ struct ServerResponseAPIVersionsMessage
         var messageSize = 4 + 4 + 2 + 1 + Items.Length * (2 + 2 + 2) + 1 + 4 + 1;
         var responseBuffer = new byte[messageSize];
 
-        BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(0, 4), messageSize);
+        BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(0, 4), messageSize - 4);
         BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(4, 4), CorrelationId);
         BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(8, 2), Error);
 
