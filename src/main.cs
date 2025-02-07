@@ -157,7 +157,6 @@ struct ServerResponseAPIVersionsMessage
         var builder = new ResponseBuilder();
         builder.Add32Bits(CorrelationId);
         builder.Add16Bits(Error);
-        builder.Add32Bits(CorrelationId);
 
         if (Items != null)
         {
