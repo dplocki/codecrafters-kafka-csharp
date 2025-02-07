@@ -33,11 +33,11 @@ if (clientRequestMessage.ApiKey == 18)
 {
     var responseApiVersions = new ServerResponseAPIVersionsMessage
     {
-        CorrelationId = clientRequestMessage.CorrelationId
+        CorrelationId = clientRequestMessage.CorrelationId,
+        Error = 0,
     };
 
     if (clientRequestMessage.ApiVersion == 4) {
-        responseApiVersions.Error = 0;
         responseApiVersions.Items = [
             new APIVersionItem()
             {
@@ -74,14 +74,14 @@ class ResponseBuilder : IDisposable
         stream.Write([0, 0, 0, 0], 0, 4);
     }
 
-    public ResponseBuilder Add8Bites(byte value)
+    public ResponseBuilder Add8Bits(byte value)
     {
         stream.WriteByte(value);
 
         return this;
     }
 
-    public ResponseBuilder Add16Bites(short value)
+    public ResponseBuilder Add16Bits(short value)
     {
         Span<byte> buffer = stackalloc byte[2];
         BinaryPrimitives.WriteInt16BigEndian(buffer, value);
@@ -90,7 +90,7 @@ class ResponseBuilder : IDisposable
         return this;
     }
 
-    public ResponseBuilder Add32Bites(int value)
+    public ResponseBuilder Add32Bits(int value)
     {
         Span<byte> buffer = stackalloc byte[4];
         BinaryPrimitives.WriteInt32BigEndian(buffer, value);
@@ -131,8 +131,8 @@ struct ServerResponseMessage
     {
         var builder = new ResponseBuilder();
 
-        builder.Add32Bites(CorrelationId);
-        builder.Add16Bites(Error);
+        builder.Add32Bits(CorrelationId);
+        builder.Add16Bits(Error);
 
         return builder.ToByteArray();
     }
@@ -156,23 +156,23 @@ struct ServerResponseAPIVersionsMessage
     public readonly byte[] ToMessage()
     {
         var builder = new ResponseBuilder();
-        builder.Add32Bites(CorrelationId);
-        builder.Add16Bites(Error);
-        builder.Add32Bites(CorrelationId);
+        builder.Add32Bits(CorrelationId);
+        builder.Add16Bits(Error);
+        builder.Add32Bits(CorrelationId);
 
         if (Items != null)
         {
-            builder.Add8Bites((byte)(Items.Length + 1));
+            builder.Add8Bits((byte)(Items.Length + 1));
             foreach(var item in Items)
             {
-                builder.Add16Bites(item.ApiKey);
-                builder.Add16Bites(item.MinVersion);
-                builder.Add16Bites(item.MaxVersion);
+                builder.Add16Bits(item.ApiKey);
+                builder.Add16Bits(item.MinVersion);
+                builder.Add16Bits(item.MaxVersion);
             }
 
-            builder.Add8Bites(0);
-            builder.Add32Bites(0);
-            builder.Add8Bites(0);
+            builder.Add8Bits(0);
+            builder.Add32Bits(0);
+            builder.Add8Bits(0);
         }
 
         return builder.ToByteArray();
