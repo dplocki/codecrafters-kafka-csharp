@@ -1,7 +1,6 @@
 using System.Buffers.Binary;
 using System.Net;
 using System.Net.Sockets;
-using Microsoft.VisualBasic;
 
 async static Task<ClientRequestMessage> ParseClientRequestMessage(Stream stream)
 {
@@ -37,7 +36,7 @@ if (clientRequestMessage.ApiKey == 18)
         Error = 0,
     };
 
-    if (clientRequestMessage.ApiVersion == 4) {
+    if (clientRequestMessage.ApiVersion <= 4) {
         responseApiVersions.Items = [
             new APIVersionItem()
             {
