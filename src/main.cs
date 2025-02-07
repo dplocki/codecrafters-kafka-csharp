@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Net;
 using System.Net.Sockets;
+using Microsoft.VisualBasic;
 
 async static Task<ClientRequestMessage> ParseClientRequestMessage(Stream stream)
 {
@@ -63,6 +64,56 @@ var response = new ServerResponseMessage()
 await stream.WriteAsync(response.ToMessage());
 await stream.FlushAsync();
 
+class ResponseBuilder : IDisposable
+{
+    readonly MemoryStream stream = new();
+    int index = 0;
+
+    public ResponseBuilder()
+    {
+        stream.Write([0, 0, 0, 0], 0, 4);
+    }
+
+    public ResponseBuilder Add8Bites(byte value)
+    {
+        stream.WriteByte(value);
+
+        return this;
+    }
+
+    public ResponseBuilder Add16Bites(short value)
+    {
+        Span<byte> buffer = stackalloc byte[2];
+        BinaryPrimitives.WriteInt16BigEndian(buffer, value);
+        stream.Write(buffer);
+
+        return this;
+    }
+
+    public ResponseBuilder Add32Bites(int value)
+    {
+        Span<byte> buffer = stackalloc byte[4];
+        BinaryPrimitives.WriteInt32BigEndian(buffer, value);
+        stream.Write(buffer);
+
+        return this;
+    }
+
+
+    public void Dispose()
+    {
+        stream.Dispose();
+    }
+
+    public byte[] ToByteArray()
+    {
+        var result = stream.ToArray();
+        BinaryPrimitives.WriteInt32BigEndian(result.AsSpan(0, 4), result.Length - 4);
+
+        return result;
+    }
+}
+
 struct ClientRequestMessage
 {
     public int ApiKey;
@@ -78,14 +129,12 @@ struct ServerResponseMessage
 
     public readonly byte[] ToMessage()
     {
-        var messageSize = 10;
-        var responseHeaderBuffer = new byte[messageSize];
+        var builder = new ResponseBuilder();
 
-        BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(0, 4), messageSize);
-        BinaryPrimitives.WriteInt32BigEndian(responseHeaderBuffer.AsSpan(4, 4), CorrelationId);
-        BinaryPrimitives.WriteInt16BigEndian(responseHeaderBuffer.AsSpan(8, 2), Error);
+        builder.Add32Bites(CorrelationId);
+        builder.Add16Bites(Error);
 
-        return responseHeaderBuffer;
+        return builder.ToByteArray();
     }
 }
 
@@ -106,36 +155,26 @@ struct ServerResponseAPIVersionsMessage
 
     public readonly byte[] ToMessage()
     {
-        var messageSize = 4 + 4 + 2 + 1 + Items.Length * (2 + 2 + 2) + 1 + 4 + 1;
-        var responseBuffer = new byte[messageSize];
-
-        BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(0, 4), messageSize - 4);
-        BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(4, 4), CorrelationId);
-        BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(8, 2), Error);
+        var builder = new ResponseBuilder();
+        builder.Add32Bites(CorrelationId);
+        builder.Add16Bites(Error);
+        builder.Add32Bites(CorrelationId);
 
         if (Items != null)
         {
-            var index = 10;
-            responseBuffer[index] = (byte)(Items.Length + 1);
-            index += 1;
-
+            builder.Add8Bites((byte)(Items.Length + 1));
             foreach(var item in Items)
             {
-                BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(index, 2), item.ApiKey);
-                index += 2;
-                BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(index, 2), item.MinVersion);
-                index += 2;
-                BinaryPrimitives.WriteInt16BigEndian(responseBuffer.AsSpan(index, 2), item.MaxVersion);
-                index += 2;
+                builder.Add16Bites(item.ApiKey);
+                builder.Add16Bites(item.MinVersion);
+                builder.Add16Bites(item.MaxVersion);
             }
 
-            responseBuffer[index] = 0;
-            index += 1;
-            BinaryPrimitives.WriteInt32BigEndian(responseBuffer.AsSpan(index, 4), 0);
-            index += 4;
-            responseBuffer[index] = 0;
+            builder.Add8Bites(0);
+            builder.Add32Bites(0);
+            builder.Add8Bites(0);
         }
 
-        return responseBuffer;
+        return builder.ToByteArray();
     }
 }
