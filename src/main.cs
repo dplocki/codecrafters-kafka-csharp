@@ -36,7 +36,7 @@ if (clientRequestMessage.ApiKey == 18)
         Error = 0,
     };
 
-    if (clientRequestMessage.ApiVersion <= 4) {
+    if (clientRequestMessage.ApiVersion >= 0 && clientRequestMessage.ApiVersion <= 4) {
         responseApiVersions.Items = [
             new APIVersionItem()
             {
@@ -97,7 +97,6 @@ class ResponseBuilder : IDisposable
 
         return this;
     }
-
 
     public void Dispose()
     {
