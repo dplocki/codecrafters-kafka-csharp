@@ -65,12 +65,13 @@ await stream.FlushAsync();
 
 class ResponseBuilder : IDisposable
 {
+    const byte SizeOfSize = 4;
     readonly MemoryStream stream = new();
-    int index = 0;
 
     public ResponseBuilder()
     {
-        stream.Write([0, 0, 0, 0], 0, 4);
+        // the size of the Size field is 4 bytes
+        stream.Write(new byte[SizeOfSize], 0, SizeOfSize);
     }
 
     public ResponseBuilder Add8Bits(byte value)
@@ -106,7 +107,7 @@ class ResponseBuilder : IDisposable
     public byte[] ToByteArray()
     {
         var result = stream.ToArray();
-        BinaryPrimitives.WriteInt32BigEndian(result.AsSpan(0, 4), result.Length - 4);
+        BinaryPrimitives.WriteInt32BigEndian(result.AsSpan(0, SizeOfSize), result.Length - SizeOfSize);
 
         return result;
     }
