@@ -25,43 +25,47 @@ server.Start();
 using var client = await server.AcceptTcpClientAsync();
 Console.WriteLine("Client connected!");
 
-var stream = client.GetStream();
-var clientRequestMessage = await ParseClientRequestMessage(stream);
-
-if (clientRequestMessage.ApiKey == 18)
+while(true)
 {
-    var responseApiVersions = new ServerResponseAPIVersionsMessage
-    {
-        CorrelationId = clientRequestMessage.CorrelationId,
-        Error = 0,
-    };
+    var stream = client.GetStream();
+    var clientRequestMessage = await ParseClientRequestMessage(stream);
 
-    if (clientRequestMessage.ApiVersion >= 0 && clientRequestMessage.ApiVersion <= 4) {
-        responseApiVersions.Items = [
-            new APIVersionItem()
-            {
-                ApiKey = 18,
-                MinVersion = 4,
-                MaxVersion = 4,
-            }
-        ];
-    } else {
-        responseApiVersions.Error = 35;
+    if (clientRequestMessage.ApiKey == 18)
+    {
+        var responseApiVersions = new ServerResponseAPIVersionsMessage
+        {
+            CorrelationId = clientRequestMessage.CorrelationId,
+            Error = 0,
+        };
+
+        if (clientRequestMessage.ApiVersion >= 0 && clientRequestMessage.ApiVersion <= 4) {
+            responseApiVersions.Items = [
+                new APIVersionItem()
+                {
+                    ApiKey = 18,
+                    MinVersion = 4,
+                    MaxVersion = 4,
+                }
+            ];
+        } else {
+            responseApiVersions.Error = 35;
+        }
+
+        await stream.WriteAsync(responseApiVersions.ToMessage());
+        await stream.FlushAsync();
+        return;
     }
 
-    await stream.WriteAsync(responseApiVersions.ToMessage());
+    var response = new ServerResponseMessage()
+    {
+        CorrelationId = clientRequestMessage.CorrelationId,
+        Error = (clientRequestMessage.ApiVersion != 4) ? (short)35 : (short)0,
+    };
+
+    await stream.WriteAsync(response.ToMessage());
     await stream.FlushAsync();
-    return;
+
 }
-
-var response = new ServerResponseMessage()
-{
-    CorrelationId = clientRequestMessage.CorrelationId,
-    Error = (clientRequestMessage.ApiVersion != 4) ? (short)35 : (short)0,
-};
-
-await stream.WriteAsync(response.ToMessage());
-await stream.FlushAsync();
 
 class ResponseBuilder : IDisposable
 {
