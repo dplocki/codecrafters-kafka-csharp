@@ -21,12 +21,11 @@ Console.WriteLine("Logs from your program will appear here!");
 
 var server = new TcpListener(IPAddress.Any, 9092);
 server.Start();
-
-using var client = await server.AcceptTcpClientAsync();
 Console.WriteLine("Client connected!");
 
-while(true)
+while (true)
 {
+    using var client = await server.AcceptTcpClientAsync();
     var stream = client.GetStream();
     var clientRequestMessage = await ParseClientRequestMessage(stream);
 
@@ -38,7 +37,8 @@ while(true)
             Error = 0,
         };
 
-        if (clientRequestMessage.ApiVersion >= 0 && clientRequestMessage.ApiVersion <= 4) {
+        if (clientRequestMessage.ApiVersion >= 0 && clientRequestMessage.ApiVersion <= 4)
+        {
             responseApiVersions.Items = [
                 new APIVersionItem()
                 {
@@ -47,24 +47,26 @@ while(true)
                     MaxVersion = 4,
                 }
             ];
-        } else {
+        }
+        else
+        {
             responseApiVersions.Error = 35;
         }
 
         await stream.WriteAsync(responseApiVersions.ToMessage());
         await stream.FlushAsync();
-        return;
     }
-
-    var response = new ServerResponseMessage()
+    else
     {
-        CorrelationId = clientRequestMessage.CorrelationId,
-        Error = (clientRequestMessage.ApiVersion != 4) ? (short)35 : (short)0,
-    };
+        var response = new ServerResponseMessage()
+        {
+            CorrelationId = clientRequestMessage.CorrelationId,
+            Error = (clientRequestMessage.ApiVersion != 4) ? (short)35 : (short)0,
+        };
 
-    await stream.WriteAsync(response.ToMessage());
-    await stream.FlushAsync();
-
+        await stream.WriteAsync(response.ToMessage());
+        await stream.FlushAsync();
+    }
 }
 
 class ResponseBuilder : IDisposable
@@ -165,7 +167,7 @@ struct ServerResponseAPIVersionsMessage
         if (Items != null)
         {
             builder.Add8Bits((byte)(Items.Length + 1));
-            foreach(var item in Items)
+            foreach (var item in Items)
             {
                 builder.Add16Bits(item.ApiKey);
                 builder.Add16Bits(item.MinVersion);
