@@ -54,7 +54,6 @@ while (true)
         }
 
         await stream.WriteAsync(responseApiVersions.ToMessage());
-        await stream.FlushAsync();
     }
     else
     {
@@ -65,7 +64,6 @@ while (true)
         };
 
         await stream.WriteAsync(response.ToMessage());
-        await stream.FlushAsync();
     }
 }
 
