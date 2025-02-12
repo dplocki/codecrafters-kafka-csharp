@@ -21,11 +21,11 @@ Console.WriteLine("Logs from your program will appear here!");
 
 var server = new TcpListener(IPAddress.Any, 9092);
 server.Start();
-Console.WriteLine("Client connected!");
 
 while (true)
 {
     using var client = await server.AcceptTcpClientAsync();
+    Console.WriteLine("Client connected!");
     var stream = client.GetStream();
     var clientRequestMessage = await ParseClientRequestMessage(stream);
 
