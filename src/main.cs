@@ -19,13 +19,14 @@ async static Task<ClientRequestMessage> ParseClientRequestMessage(Stream stream)
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 Console.WriteLine("Logs from your program will appear here!");
 
-var server = new TcpListener(IPAddress.Any, 9092);
+using var server = new TcpListener(IPAddress.Any, 9092);
 server.Start();
 
 while (true)
 {
     using var client = await server.AcceptTcpClientAsync();
     Console.WriteLine("Client connected!");
+
     var stream = client.GetStream();
     var clientRequestMessage = await ParseClientRequestMessage(stream);
 
