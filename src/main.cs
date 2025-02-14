@@ -52,6 +52,7 @@ while (true)
         else
         {
             responseApiVersions.Error = 35;
+            responseApiVersions.Items = [];
         }
 
         await stream.WriteAsync(responseApiVersions.ToMessage());
