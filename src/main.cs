@@ -4,15 +4,18 @@ using System.Net.Sockets;
 
 async static Task<ClientRequestMessage> ParseClientRequestMessage(Stream stream)
 {
-    var buffer = new byte[12];
-    var messageSize = BinaryPrimitives.ReadInt32BigEndian(buffer.AsSpan(0, 4));
+    var sizeBuffer = new byte[4];
+    await stream.ReadExactlyAsync(sizeBuffer);
+    var messageSize = BinaryPrimitives.ReadInt32BigEndian(sizeBuffer.AsSpan());
 
+    var buffer = new byte[messageSize];
     await stream.ReadExactlyAsync(buffer);
+
     return new ClientRequestMessage()
     {
-        ApiKey = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(4, 2)),
-        ApiVersion = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(6, 2)),
-        CorrelationId = BinaryPrimitives.ReadInt32BigEndian(buffer.AsSpan(8, 4))
+        ApiKey = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(0, 2)),
+        ApiVersion = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(2, 2)),
+        CorrelationId = BinaryPrimitives.ReadInt32BigEndian(buffer.AsSpan(4, 4))
     };
 }
 
