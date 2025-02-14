@@ -25,48 +25,55 @@ server.Start();
 while (true)
 {
     using var client = await server.AcceptTcpClientAsync();
-    Console.WriteLine("Client connected!");
-
-    var stream = client.GetStream();
-    var clientRequestMessage = await ParseClientRequestMessage(stream);
-
-    if (clientRequestMessage.ApiKey == 18)
+    _ = Task.Run(async () =>
     {
-        var responseApiVersions = new ServerResponseAPIVersionsMessage
+        Console.WriteLine("Client connected!");
+        using (client)
         {
-            CorrelationId = clientRequestMessage.CorrelationId,
-            Error = 0,
-        };
-
-        if (clientRequestMessage.ApiVersion >= 0 && clientRequestMessage.ApiVersion <= 4)
-        {
-            responseApiVersions.Items = [
-                new APIVersionItem()
+            var stream = client.GetStream();
+            while (client.Connected)  // Keep processing requests
+            {
+                var clientRequestMessage = await ParseClientRequestMessage(stream);
+                if (clientRequestMessage.ApiKey == 18)
                 {
-                    ApiKey = 18,
-                    MinVersion = 4,
-                    MaxVersion = 4,
+                    var responseApiVersions = new ServerResponseAPIVersionsMessage
+                    {
+                        CorrelationId = clientRequestMessage.CorrelationId,
+                        Error = 0,
+                    };
+
+                    if (clientRequestMessage.ApiVersion >= 0 && clientRequestMessage.ApiVersion <= 4)
+                    {
+                        responseApiVersions.Items = [
+                            new APIVersionItem()
+                            {
+                                ApiKey = 18,
+                                MinVersion = 4,
+                                MaxVersion = 4,
+                            }
+                        ];
+                    }
+                    else
+                    {
+                        responseApiVersions.Error = 35;
+                        responseApiVersions.Items = [];
+                    }
+
+                    await stream.WriteAsync(responseApiVersions.ToMessage());
                 }
-            ];
-        }
-        else
-        {
-            responseApiVersions.Error = 35;
-            responseApiVersions.Items = [];
-        }
+                else
+                {
+                    var response = new ServerResponseMessage()
+                    {
+                        CorrelationId = clientRequestMessage.CorrelationId,
+                        Error = (clientRequestMessage.ApiVersion != 4) ? (short)35 : (short)0,
+                    };
 
-        await stream.WriteAsync(responseApiVersions.ToMessage());
-    }
-    else
-    {
-        var response = new ServerResponseMessage()
-        {
-            CorrelationId = clientRequestMessage.CorrelationId,
-            Error = (clientRequestMessage.ApiVersion != 4) ? (short)35 : (short)0,
-        };
-
-        await stream.WriteAsync(response.ToMessage());
-    }
+                    await stream.WriteAsync(response.ToMessage());
+                }
+            }
+        }
+    });
 }
 
 class ResponseBuilder : IDisposable
