@@ -27,7 +27,7 @@ server.Start();
 
 while (true)
 {
-    using var client = await server.AcceptTcpClientAsync();
+    var client = await server.AcceptTcpClientAsync();
     _ = Task.Run(async () =>
     {
         Console.WriteLine("Client connected!");
