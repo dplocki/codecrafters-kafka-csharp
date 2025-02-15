@@ -34,7 +34,7 @@ while (true)
         using (client)
         {
             var stream = client.GetStream();
-            while (client.Connected)  // Keep processing requests
+            while (client.Connected)
             {
                 var clientRequestMessage = await ParseClientRequestMessage(stream);
                 if (clientRequestMessage.ApiKey == 18)
@@ -53,6 +53,12 @@ while (true)
                                 ApiKey = 18,
                                 MinVersion = 4,
                                 MaxVersion = 4,
+                            },
+                            new APIVersionItem()
+                            {
+                                ApiKey = 75,
+                                MinVersion = 0,
+                                MaxVersion = 0,
                             }
                         ];
                     }
@@ -182,9 +188,9 @@ struct ServerResponseAPIVersionsMessage
                 builder.Add16Bits(item.ApiKey);
                 builder.Add16Bits(item.MinVersion);
                 builder.Add16Bits(item.MaxVersion);
+                builder.Add8Bits(0);
             }
 
-            builder.Add8Bits(0);
             builder.Add32Bits(0);
             builder.Add8Bits(0);
         }
