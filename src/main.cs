@@ -2,25 +2,9 @@ using System.Buffers.Binary;
 using System.Net;
 using System.Net.Sockets;
 
-async static Task<ClientRequestMessage> ParseClientRequestMessage(Stream stream)
-{
-    var sizeBuffer = new byte[4];
-    await stream.ReadExactlyAsync(sizeBuffer);
-    var messageSize = BinaryPrimitives.ReadInt32BigEndian(sizeBuffer.AsSpan());
-
-    var buffer = new byte[messageSize];
-    await stream.ReadExactlyAsync(buffer);
-
-    return new ClientRequestMessage()
-    {
-        ApiKey = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(0, 2)),
-        ApiVersion = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(2, 2)),
-        CorrelationId = BinaryPrimitives.ReadInt32BigEndian(buffer.AsSpan(4, 4))
-    };
-}
-
-// You can use print statements as follows for debugging, they'll be visible when running tests.
 Console.WriteLine("Logs from your program will appear here!");
+
+var requestFactory = new RequestFactory();
 
 using var server = new TcpListener(IPAddress.Any, 9092);
 server.Start();
@@ -36,7 +20,7 @@ while (true)
             var stream = client.GetStream();
             while (client.Connected)
             {
-                var clientRequestMessage = await ParseClientRequestMessage(stream);
+                var clientRequestMessage = await requestFactory.ParseRequest(stream);
                 if (clientRequestMessage.ApiKey == 18)
                 {
                     var responseApiVersions = new ServerResponseAPIVersionsMessage
@@ -133,13 +117,6 @@ class ResponseBuilder : IDisposable
 
         return result;
     }
-}
-
-struct ClientRequestMessage
-{
-    public int ApiKey;
-    public int ApiVersion;
-    public int CorrelationId;
 }
 
 struct ServerResponseMessage
