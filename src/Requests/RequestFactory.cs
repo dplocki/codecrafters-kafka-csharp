@@ -8,7 +8,8 @@ public class RequestFactory
     {
         modules = new Dictionary<int, IModule>
         {
-            { 18, new ApiVersions() }
+            { 18, new ApiVersions() },
+            { 75, new DescribeTopicPartitions() }
         };
     }
 
