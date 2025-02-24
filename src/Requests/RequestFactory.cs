@@ -19,7 +19,7 @@ public class RequestFactory
         await stream.ReadExactlyAsync(sizeBuffer);
         var messageSize = BinaryPrimitives.ReadInt32BigEndian(sizeBuffer.AsSpan());
 
-        var buffer = new byte[messageSize];
+        var buffer = new byte[messageSize - 1];
         await stream.ReadExactlyAsync(buffer);
 
         return new RequestMessage()
