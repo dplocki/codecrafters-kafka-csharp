@@ -35,6 +35,18 @@ class ResponseBuilder : IDisposable
         return this;
     }
 
+    public ResponseBuilder AddString(string value)
+    {
+        Add8Bits((byte)(value.Length + 1));
+
+        foreach(var letter in value)
+        {
+            Add8Bits((byte)letter);
+        }
+
+        return this;
+    }
+
     public void Dispose()
     {
         stream.Dispose();
