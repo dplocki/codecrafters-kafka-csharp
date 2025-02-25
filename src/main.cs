@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Sockets;
 
-Console.WriteLine("Logs from your program will appear here!");
+Console.WriteLine("Server started");
 
 var requestFactory = new RequestFactory();
 
