@@ -13,7 +13,7 @@ while (true)
     var client = await server.AcceptTcpClientAsync();
     _ = Task.Run(async () =>
     {
-        Console.WriteLine("Client connected!");
+        Console.WriteLine("Client connected");
         using (client)
         {
             var stream = client.GetStream();
