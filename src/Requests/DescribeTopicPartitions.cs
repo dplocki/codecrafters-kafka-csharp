@@ -1,3 +1,5 @@
+using System.Text;
+
 internal class DescribeTopicPartitions : IModule
 {
     const int UNKNOWN_TOPIC_OR_PARTITION = 3;
@@ -10,7 +12,7 @@ internal class DescribeTopicPartitions : IModule
         {
             CorrelationId = requestMessage.CorrelationId,
             Error = UNKNOWN_TOPIC_OR_PARTITION,
-            Topic = requestMessage.RawRequestBody.AsSpan(2, topicLength - 1).ToString(),
+            Topic = Encoding.ASCII.GetString(requestMessage.RawRequestBody.AsSpan(2, topicLength - 1)),
         };
 
         return result.ToMessage();
