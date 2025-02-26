@@ -34,6 +34,7 @@ struct ServerResponseDescribeTopicPartitionsMessage
         var builder = new ResponseBuilder();
         builder.Add32Bits(CorrelationId);
         builder.Add16Bits(Error);
+        builder.AddString(Topic);
         builder.Add32Bits(1);
         builder.Add32Bits(0);
 
