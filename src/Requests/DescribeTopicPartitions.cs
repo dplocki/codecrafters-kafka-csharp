@@ -52,7 +52,9 @@ struct ServerResponseDescribeTopicPartitionsMessage
 
             builder.Add8Bits(0); // As internal
 
-            builder.Add8Bits(1); // Partitions Id
+            builder.Add8Bits(1); // Partitions Array Length
+
+            builder.Add8Bits(0); // Tag buffer
         }
 
         return builder.ToByteArray();
