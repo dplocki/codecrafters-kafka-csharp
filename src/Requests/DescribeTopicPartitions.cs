@@ -12,7 +12,9 @@ internal class DescribeTopicPartitions : IModule
         {
             CorrelationId = requestMessage.CorrelationId,
             Error = UNKNOWN_TOPIC_OR_PARTITION,
-            Topic = Encoding.ASCII.GetString(requestMessage.RawRequestBody.AsSpan(2, topicLength - 1)),
+            Topics = [
+                Encoding.ASCII.GetString(requestMessage.RawRequestBody.AsSpan(2, topicLength - 1)),
+            ],
         };
 
         return result.ToMessage();
@@ -27,20 +29,31 @@ struct ServerResponseDescribeTopicPartitionsMessage
 
     public APIVersionItem[] Items;
 
-    public string Topic;
+    public string[] Topics;
 
     public readonly byte[] ToMessage()
     {
         var builder = new ResponseBuilder();
         builder.Add32Bits(CorrelationId);
-        builder.Add32Bits(0);
-        builder.Add32Bits(1);
-        builder.AddString(Topic);
+        builder.Add8Bits(0); // Tag buffer
+        builder.Add32Bits(0); // Throttle Time
 
-        builder.Add32Bits(1);
-        builder.Add32Bits(0);
+        builder.Add8Bits((byte)Topics.Length);
 
-        builder.Add16Bits(Error);
+        foreach(var topic in Topics) {
+            builder.Add16Bits(Error);
+            builder.AddString(topic);
+
+            // topic ID (GUID, 128 bites)
+            builder.Add32Bits(0);
+            builder.Add32Bits(0);
+            builder.Add32Bits(0);
+            builder.Add32Bits(0);
+
+            builder.Add8Bits(0); // As internal
+
+            builder.Add8Bits(1); // Partitions Id
+        }
 
         return builder.ToByteArray();
     }
