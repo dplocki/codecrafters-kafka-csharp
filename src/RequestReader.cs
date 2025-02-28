@@ -16,7 +16,7 @@ public class RequestReader
         stream.ReadExactly(messageBuffer);
     }
 
-    public byte Read8its() {
+    public byte Read8Bits() {
         return messageBuffer[index++];
     }
 
@@ -33,8 +33,17 @@ public class RequestReader
     }
 
     public string ReadString() {
-        var length = Read8its();
-        var value = messageBuffer.AsSpan(2, length - 1);
+        var length = Read16Bites();
+        var value = messageBuffer.AsSpan(index, length - 1);
+
+        index += length;
+
+        return Encoding.ASCII.GetString(value);
+    }
+
+    public string ReadCompactString() {
+        var length = Read8Bits();
+        var value = messageBuffer.AsSpan(index, length - 1);
 
         index += length;
 

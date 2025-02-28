@@ -14,14 +14,18 @@ public class RequestFactory
     public RequestMessage ParseRequest(Stream stream)
     {
         var requestReader = new RequestReader(stream);
-
-        return new RequestMessage()
+        var result = new RequestMessage()
         {
             ApiKey = requestReader.Read16Bites(),
             ApiVersion = requestReader.Read16Bites(),
             CorrelationId = requestReader.Read32Bites(),
+            ClientId = requestReader.ReadString(),
             RequestReader = requestReader,
         };
+
+        requestReader.Read8Bits(); // Tag buffer
+
+        return result;
     }
 
     public IModule FindRequestModule(RequestMessage request)
