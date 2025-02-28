@@ -38,7 +38,7 @@ struct ServerResponseDescribeTopicPartitionsMessage
         builder.Add8Bits(0); // Tag buffer
         builder.Add32Bits(0); // Throttle Time
 
-        builder.Add8Bits((byte)Topics.Length);
+        builder.Add8Bits((byte)(Topics.Length + 1));
 
         foreach(var topic in Topics) {
             builder.Add16Bits(Error);
@@ -54,8 +54,12 @@ struct ServerResponseDescribeTopicPartitionsMessage
 
             builder.Add8Bits(1); // Partitions Array Length
 
+            builder.Add32Bits(0); // Authorized Operations
             builder.Add8Bits(0); // Tag buffer
         }
+
+        builder.Add8Bits(0xff); // Next cursor (0xff is null)
+        builder.Add8Bits(0); // Tag buffer
 
         return builder.ToByteArray();
     }
