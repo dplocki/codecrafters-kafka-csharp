@@ -1,8 +1,6 @@
-using System.Buffers.Binary;
-
 public class RequestFactory
 {
-    private Dictionary<int, IModule> modules;
+    private readonly Dictionary<int, IModule> modules;
 
     public RequestFactory()
     {
@@ -13,21 +11,16 @@ public class RequestFactory
         };
     }
 
-    public async Task<RequestMessage> ParseRequest(Stream stream)
+    public RequestMessage ParseRequest(Stream stream)
     {
-        var sizeBuffer = new byte[4];
-        await stream.ReadExactlyAsync(sizeBuffer);
-        var messageSize = BinaryPrimitives.ReadInt32BigEndian(sizeBuffer.AsSpan());
-
-        var buffer = new byte[messageSize];
-        await stream.ReadExactlyAsync(buffer);
+        var requestReader = new RequestReader(stream);
 
         return new RequestMessage()
         {
-            ApiKey = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(0, 2)),
-            ApiVersion = BinaryPrimitives.ReadInt16BigEndian(buffer.AsSpan(2, 2)),
-            CorrelationId = BinaryPrimitives.ReadInt32BigEndian(buffer.AsSpan(4, 4)),
-            RawRequestBody = buffer.AsSpan(8).ToArray()
+            ApiKey = requestReader.Read16Bites(),
+            ApiVersion = requestReader.Read16Bites(),
+            CorrelationId = requestReader.Read32Bites(),
+            RequestReader = requestReader,
         };
     }
 

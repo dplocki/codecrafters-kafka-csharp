@@ -1,19 +1,15 @@
-using System.Text;
-
 internal class DescribeTopicPartitions : IModule
 {
     const int UNKNOWN_TOPIC_OR_PARTITION = 3;
 
     public byte[] Respond(RequestMessage requestMessage)
     {
-        var topicLength = requestMessage.RawRequestBody[1];
-
         var result = new ServerResponseDescribeTopicPartitionsMessage
         {
             CorrelationId = requestMessage.CorrelationId,
             Error = UNKNOWN_TOPIC_OR_PARTITION,
             Topics = [
-                Encoding.ASCII.GetString(requestMessage.RawRequestBody.AsSpan(2, topicLength - 1)),
+               requestMessage.RequestReader.ReadString()
             ],
         };
 

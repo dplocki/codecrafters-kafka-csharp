@@ -19,7 +19,7 @@ while (true)
             var stream = client.GetStream();
             while (client.Connected)
             {
-                var clientRequestMessage = await requestFactory.ParseRequest(stream);
+                var clientRequestMessage = requestFactory.ParseRequest(stream);
                 var module = requestFactory.FindRequestModule(clientRequestMessage);
                 await stream.WriteAsync(module.Respond(clientRequestMessage));
             }

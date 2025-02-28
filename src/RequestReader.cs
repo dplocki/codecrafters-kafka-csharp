@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Text;
 
 public class RequestReader
 {
@@ -19,15 +20,24 @@ public class RequestReader
         return messageBuffer[index++];
     }
 
-    public short Read16bites() {
+    public short Read16Bites() {
         var value = BinaryPrimitives.ReadInt16BigEndian(messageBuffer.AsSpan(index, 2));
         index += 2;
         return value;
     }
 
-    public int Read32bites() {
+    public int Read32Bites() {
         var value = BinaryPrimitives.ReadInt32BigEndian(messageBuffer.AsSpan(index, 4));
         index += 4;
         return value;
+    }
+
+    public string ReadString() {
+        var length = Read8its();
+        var value = messageBuffer.AsSpan(2, length - 1);
+
+        index += length;
+
+        return Encoding.ASCII.GetString(value);
     }
 }
