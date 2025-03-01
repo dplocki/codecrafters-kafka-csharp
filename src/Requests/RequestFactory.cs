@@ -20,6 +20,7 @@ public class RequestFactory
             ApiVersion = requestReader.Read16Bites(),
             CorrelationId = requestReader.Read32Bites(),
             ClientId = requestReader.ReadString(),
+
             RequestReader = requestReader,
         };
 

@@ -4,12 +4,15 @@ internal class DescribeTopicPartitions : IModule
 
     public byte[] Respond(RequestMessage requestMessage)
     {
+        var clientSoftwareVersion = requestMessage.RequestReader.ReadCompactString();
+        requestMessage.RequestReader.Read8Bits(); // tag buffer
+
         var result = new ServerResponseDescribeTopicPartitionsMessage
         {
             CorrelationId = requestMessage.CorrelationId,
             Error = UNKNOWN_TOPIC_OR_PARTITION,
             Topics = [
-               requestMessage.RequestReader.ReadString()
+                clientSoftwareVersion
             ],
         };
 
