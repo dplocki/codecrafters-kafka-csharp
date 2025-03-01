@@ -29,8 +29,6 @@ struct ServerResponseDescribeTopicPartitionsMessage
 
     public short Error;
 
-    public APIVersionItem[] Items;
-
     public string[] Topics;
 
     public readonly byte[] ToMessage()
