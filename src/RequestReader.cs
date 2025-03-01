@@ -42,7 +42,7 @@ public class RequestReader
     }
 
     public string ReadCompactString() {
-        var length = Read8Bits();
+        var length = Read8Bits() - 1;
         var value = messageBuffer.AsSpan(index, length);
 
         index += length;
