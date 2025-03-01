@@ -4,7 +4,7 @@ internal class DescribeTopicPartitions : IModule
 
     public byte[] Respond(RequestMessage requestMessage)
     {
-        var topicArrayLength = requestMessage.RequestReader.Read8Bits();
+        var topicArrayLength = requestMessage.RequestReader.Read8Bits() - 1;
         var topics = new string[topicArrayLength];
 
         for(var i = 0; i < topicArrayLength; i++) {
