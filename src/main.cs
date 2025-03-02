@@ -35,8 +35,8 @@ struct ServerResponseMessage
     {
         var builder = new ResponseBuilder();
 
-        builder.Add32Bits(CorrelationId);
-        builder.Add16Bits(Error);
+        builder.Add4Bytes(CorrelationId);
+        builder.Add2Bytes(Error);
 
         return builder.ToByteArray();
     }

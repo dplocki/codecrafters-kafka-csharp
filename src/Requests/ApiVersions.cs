@@ -46,22 +46,22 @@ struct ServerResponseAPIVersionsMessage
     public readonly byte[] ToMessage()
     {
         var builder = new ResponseBuilder();
-        builder.Add32Bits(CorrelationId);
-        builder.Add16Bits(Error);
+        builder.Add4Bytes(CorrelationId);
+        builder.Add2Bytes(Error);
 
         if (Items != null)
         {
-            builder.Add8Bits((byte)(Items.Length + 1));
+            builder.AddByte((byte)(Items.Length + 1));
             foreach (var item in Items)
             {
-                builder.Add16Bits(item.ApiKey);
-                builder.Add16Bits(item.MinVersion);
-                builder.Add16Bits(item.MaxVersion);
-                builder.Add8Bits(0);
+                builder.Add2Bytes(item.ApiKey);
+                builder.Add2Bytes(item.MinVersion);
+                builder.Add2Bytes(item.MaxVersion);
+                builder.AddByte(0);
             }
 
-            builder.Add32Bits(0);
-            builder.Add8Bits(0);
+            builder.Add4Bytes(0);
+            builder.AddByte(0);
         }
 
         return builder.ToByteArray();

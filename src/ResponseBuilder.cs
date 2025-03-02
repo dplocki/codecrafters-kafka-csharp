@@ -10,14 +10,14 @@ class ResponseBuilder : IDisposable
         stream.Write(new byte[SizeOfSize], 0, SizeOfSize);
     }
 
-    public ResponseBuilder Add8Bits(byte value)
+    public ResponseBuilder AddByte(byte value)
     {
         stream.WriteByte(value);
 
         return this;
     }
 
-    public ResponseBuilder Add16Bits(short value)
+    public ResponseBuilder Add2Bytes(short value)
     {
         Span<byte> buffer = stackalloc byte[2];
         BinaryPrimitives.WriteInt16BigEndian(buffer, value);
@@ -26,7 +26,7 @@ class ResponseBuilder : IDisposable
         return this;
     }
 
-    public ResponseBuilder Add32Bits(int value)
+    public ResponseBuilder Add4Bytes(int value)
     {
         Span<byte> buffer = stackalloc byte[4];
         BinaryPrimitives.WriteInt32BigEndian(buffer, value);
@@ -37,11 +37,11 @@ class ResponseBuilder : IDisposable
 
     public ResponseBuilder AddString(string value)
     {
-        Add8Bits((byte)(value.Length + 1));
+        AddByte((byte)(value.Length + 1));
 
         foreach(var letter in value)
         {
-            Add8Bits((byte)letter);
+            AddByte((byte)letter);
         }
 
         return this;

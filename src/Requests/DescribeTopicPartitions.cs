@@ -34,32 +34,32 @@ struct ServerResponseDescribeTopicPartitionsMessage
     public readonly byte[] ToMessage()
     {
         var builder = new ResponseBuilder();
-        builder.Add32Bits(CorrelationId);
-        builder.Add8Bits(0); // Tag buffer
-        builder.Add32Bits(0); // Throttle Time
+        builder.Add4Bytes(CorrelationId);
+        builder.AddByte(0); // Tag buffer
+        builder.Add4Bytes(0); // Throttle Time
 
-        builder.Add8Bits((byte)(Topics.Length + 1));
+        builder.AddByte((byte)(Topics.Length + 1));
 
         foreach(var topic in Topics) {
-            builder.Add16Bits(Error);
+            builder.Add2Bytes(Error);
             builder.AddString(topic);
 
             // topic ID (GUID, 128 bites)
-            builder.Add32Bits(0);
-            builder.Add32Bits(0);
-            builder.Add32Bits(0);
-            builder.Add32Bits(0);
+            builder.Add4Bytes(0);
+            builder.Add4Bytes(0);
+            builder.Add4Bytes(0);
+            builder.Add4Bytes(0);
 
-            builder.Add8Bits(0); // As internal
+            builder.AddByte(0); // As internal
 
-            builder.Add8Bits(1); // Partitions Array Length
+            builder.AddByte(1); // Partitions Array Length
 
-            builder.Add32Bits(0); // Authorized Operations
-            builder.Add8Bits(0); // Tag buffer
+            builder.Add4Bytes(0); // Authorized Operations
+            builder.AddByte(0); // Tag buffer
         }
 
-        builder.Add8Bits(0xff); // Next cursor (0xff is null)
-        builder.Add8Bits(0); // Tag buffer
+        builder.AddByte(0xff); // Next cursor (0xff is null)
+        builder.AddByte(0); // Tag buffer
 
         return builder.ToByteArray();
     }
