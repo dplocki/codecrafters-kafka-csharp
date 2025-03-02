@@ -17,10 +17,12 @@ while (true)
         using (client)
         {
             var stream = client.GetStream();
-            Console.WriteLine("Client request");
-            var clientRequestMessage = requestFactory.ParseRequest(stream);
-            var module = requestFactory.FindRequestModule(clientRequestMessage);
-            await stream.WriteAsync(module.Respond(clientRequestMessage));
+            while (client.Connected) {
+                Console.WriteLine("Client request");
+                var clientRequestMessage = requestFactory.ParseRequest(stream);
+                var module = requestFactory.FindRequestModule(clientRequestMessage);
+                await stream.WriteAsync(module.Respond(clientRequestMessage));
+            }
         }
     });
 }
