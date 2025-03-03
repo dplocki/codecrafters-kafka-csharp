@@ -1,14 +1,18 @@
 internal class DescribeTopicPartitions : IModule
 {
+    const string CLUSTER_METADATA_PATH = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
     const int UNKNOWN_TOPIC_OR_PARTITION = 3;
 
     public byte[] Respond(RequestMessage requestMessage)
     {
-        var topicArrayLength = requestMessage.RequestReader.Read8Bits() - 1;
-        var topics = new string[topicArrayLength];
+        var topics = LoadTopics();
 
-        for(var i = 0; i < topicArrayLength; i++) {
-            topics[i] = requestMessage.RequestReader.ReadCompactString();
+        var topicArrayLength = requestMessage.RequestReader.Read8Bits() - 1;
+        var requestedTopics = new string[topicArrayLength];
+
+        for (var i = 0; i < topicArrayLength; i++)
+        {
+            requestedTopics[i] = requestMessage.RequestReader.ReadCompactString();
             requestMessage.RequestReader.Read8Bits(); // topic tag buffer
         }
 
@@ -16,10 +20,16 @@ internal class DescribeTopicPartitions : IModule
         {
             CorrelationId = requestMessage.CorrelationId,
             Error = UNKNOWN_TOPIC_OR_PARTITION,
-            Topics = topics,
+            Topics = requestedTopics,
         };
 
         return result.ToMessage();
+    }
+
+    private DescribeTopic[] LoadTopics()
+    {
+        // return File.ReadAllBytes(CLUSTER_METADATA_PATH);
+        return [];
     }
 }
 
@@ -63,4 +73,11 @@ struct ServerResponseDescribeTopicPartitionsMessage
 
         return builder.ToByteArray();
     }
+}
+
+struct DescribeTopic
+{
+    public string Name;
+
+    public Guid GenericUriParserOptions;
 }
