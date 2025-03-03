@@ -28,7 +28,24 @@ internal class DescribeTopicPartitions : IModule
 
     private DescribeTopic[] LoadTopics()
     {
-        // return File.ReadAllBytes(CLUSTER_METADATA_PATH);
+        // open the CLUSTER_METADATA_PATH file as stream
+        var stream = File.OpenRead(CLUSTER_METADATA_PATH);
+        var reader = new BinaryReader(stream);
+
+        reader.ReadBytes(8); // Base Offset
+        reader.ReadBytes(4); // Batch Length
+        reader.ReadBytes(4); // Partition Leader Epoch
+        reader.ReadBytes(1); // Magic Byte
+        reader.ReadBytes(4); // CRC
+        reader.ReadBytes(2); // Attributes
+        reader.ReadBytes(4); // Last Offset Delta
+        reader.ReadBytes(8); // First Timestamp
+        reader.ReadBytes(8); // Max Timestamp
+        reader.ReadBytes(8); // Producer ID
+        reader.ReadBytes(2); // Producer Epoch
+        reader.ReadBytes(4); // Base Sequence
+        reader.ReadBytes(4); // Records Length
+
         return [];
     }
 }
