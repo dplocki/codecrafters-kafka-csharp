@@ -1,3 +1,5 @@
+using System.Text;
+
 internal class DescribeTopicPartitions : IModule
 {
     const string CLUSTER_METADATA_PATH = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
@@ -26,8 +28,9 @@ internal class DescribeTopicPartitions : IModule
         return result.ToMessage();
     }
 
-    private DescribeTopic[] LoadTopics()
+    private IEnumerable<DescribeTopic> LoadTopics()
     {
+        var result = new List<DescribeTopic>();
         // open the CLUSTER_METADATA_PATH file as stream
         var stream = File.OpenRead(CLUSTER_METADATA_PATH);
         var reader = new BinaryReader(stream);
@@ -44,9 +47,42 @@ internal class DescribeTopicPartitions : IModule
         reader.ReadBytes(8); // Producer ID
         reader.ReadBytes(2); // Producer Epoch
         reader.ReadBytes(4); // Base Sequence
-        reader.ReadBytes(4); // Records Length
 
-        return [];
+        var recordsCountInt = BitConverter.ToInt32(reader.ReadBytes(4), 0);
+
+        for(var indexRecord = 0; indexRecord < recordsCountInt; indexRecord++) {
+            reader.ReadBytes(
+                1 + 1 + 1  // Record Length + Attributes + Timestamp Delta
+                + 1 + 1 + 1 // Offset Delta + Key Length + Key
+            );
+
+            var valueLength = reader.ReadByte();
+
+            reader.ReadBytes(1); //  Frame Version
+            var valueType = reader.ReadByte();
+            if (valueType == 2) // Topic Record
+            {
+                reader.ReadBytes(1); // Version
+                var nameLength = reader.ReadByte();
+                var topicName = Encoding.UTF8.GetString(reader.ReadBytes(nameLength));
+                var guid = new Guid(reader.ReadBytes(16));
+                reader.ReadByte(); // Tagged Fields Count
+
+                result.Add(new DescribeTopic
+                {
+                    Name = topicName,
+                    UUID = guid,
+                });
+            }
+            else
+            {
+                reader.ReadBytes(valueLength - 2); // Length - Frame Version + Value Type
+            }
+
+            reader.ReadBytes(1); //  Headers Array Count
+        }
+
+        return result;
     }
 }
 
@@ -96,5 +132,5 @@ struct DescribeTopic
 {
     public string Name;
 
-    public Guid GenericUriParserOptions;
+    public Guid UUID;
 }
