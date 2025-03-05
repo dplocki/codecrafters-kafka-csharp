@@ -35,6 +35,16 @@ class ResponseBuilder : IDisposable
         return this;
     }
 
+    public ResponseBuilder AddGuid(Guid value)
+    {
+        Span<byte> buffer = stackalloc byte[16];
+        value.TryWriteBytes(buffer);
+        stream.Write(buffer);
+
+        return this;
+    }
+
+
     public ResponseBuilder AddString(string value)
     {
         AddByte((byte)(value.Length + 1));
@@ -46,7 +56,6 @@ class ResponseBuilder : IDisposable
 
         return this;
     }
-
     public void Dispose()
     {
         stream.Dispose();

@@ -3,32 +3,37 @@ using System.Text;
 internal class DescribeTopicPartitions : IModule
 {
     const string CLUSTER_METADATA_PATH = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
-    const int UNKNOWN_TOPIC_OR_PARTITION = 3;
+    const short UNKNOWN_TOPIC_OR_PARTITION = 3;
 
     public byte[] Respond(RequestMessage requestMessage)
     {
         var topics = LoadTopics();
 
         var topicArrayLength = requestMessage.RequestReader.Read8Bits() - 1;
-        var requestedTopics = new string[topicArrayLength];
+        var requestedTopics = new ServerResponseDescribeTopicPartitionsMessageTopic[topicArrayLength];
 
         for (var i = 0; i < topicArrayLength; i++)
         {
-            requestedTopics[i] = requestMessage.RequestReader.ReadCompactString();
+            var topicName = requestMessage.RequestReader.ReadCompactString();
+            var loadedTopic = topics.FirstOrDefault(topic => topic.Name == topicName, null);
+
+            requestedTopics[i].Name = topicName;
+            requestedTopics[i].Error = (short)(loadedTopic == null ? UNKNOWN_TOPIC_OR_PARTITION : 0);
+            requestedTopics[i].UUID = loadedTopic?.UUID ?? Guid.Empty;
+
             requestMessage.RequestReader.Read8Bits(); // topic tag buffer
         }
 
         var result = new ServerResponseDescribeTopicPartitionsMessage
         {
             CorrelationId = requestMessage.CorrelationId,
-            Error = UNKNOWN_TOPIC_OR_PARTITION,
             Topics = requestedTopics,
         };
 
         return result.ToMessage();
     }
 
-    private IEnumerable<DescribeTopic> LoadTopics()
+    private IList<DescribeTopic> LoadTopics()
     {
         var result = new List<DescribeTopic>();
         // open the CLUSTER_METADATA_PATH file as stream
@@ -86,13 +91,20 @@ internal class DescribeTopicPartitions : IModule
     }
 }
 
+class ServerResponseDescribeTopicPartitionsMessageTopic
+{
+    public short Error;
+
+    public required string Name;
+
+    public Guid UUID;
+}
+
 struct ServerResponseDescribeTopicPartitionsMessage
 {
     public int CorrelationId;
 
-    public short Error;
-
-    public string[] Topics;
+    public ServerResponseDescribeTopicPartitionsMessageTopic[] Topics;
 
     public readonly byte[] ToMessage()
     {
@@ -104,14 +116,10 @@ struct ServerResponseDescribeTopicPartitionsMessage
         builder.AddByte((byte)(Topics.Length + 1));
 
         foreach(var topic in Topics) {
-            builder.Add2Bytes(Error);
-            builder.AddString(topic);
+            builder.Add2Bytes(topic.Error);
+            builder.AddString(topic.Name);
 
-            // topic ID (GUID, 128 bites)
-            builder.Add4Bytes(0);
-            builder.Add4Bytes(0);
-            builder.Add4Bytes(0);
-            builder.Add4Bytes(0);
+            builder.AddGuid(topic.UUID);
 
             builder.AddByte(0); // As internal
 
@@ -128,9 +136,9 @@ struct ServerResponseDescribeTopicPartitionsMessage
     }
 }
 
-struct DescribeTopic
+class DescribeTopic
 {
-    public string Name;
+    public required string Name;
 
     public Guid UUID;
 }
