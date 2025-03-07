@@ -15,10 +15,14 @@ internal class DescribeTopicPartitions : IModule
         {
             var topicName = requestMessage.RequestReader.ReadCompactString();
             var loadedTopic = topics.FirstOrDefault(topic => topic!.Name == topicName, null);
+            var topicObject = new ServerResponseDescribeTopicPartitionsMessageTopic()
+            {
+                Name = topicName,
+                Error = (short)(loadedTopic == null ? UNKNOWN_TOPIC_OR_PARTITION : 0),
+                UUID = loadedTopic?.UUID ?? Guid.Empty,
+            };
 
-            requestedTopics[i].Name = topicName;
-            requestedTopics[i].Error = (short)(loadedTopic == null ? UNKNOWN_TOPIC_OR_PARTITION : 0);
-            requestedTopics[i].UUID = loadedTopic?.UUID ?? Guid.Empty;
+            requestedTopics[i] = topicObject;
 
             requestMessage.RequestReader.Read8Bits(); // topic tag buffer
         }
@@ -52,13 +56,16 @@ internal class DescribeTopicPartitions : IModule
         reader.ReadBytes(2); // Producer Epoch
         reader.ReadBytes(4); // Base Sequence
 
-        var recordsCountInt = BitConverter.ToInt32(reader.ReadBytes(4), 0);
+        var recordsCountBytes = reader.ReadBytes(4);
+        var recordsCountInt = (recordsCountBytes[0] << 24) | (recordsCountBytes[1] << 16) | (recordsCountBytes[2] << 8) | recordsCountBytes[3];
 
         for(var indexRecord = 0; indexRecord < recordsCountInt; indexRecord++) {
             reader.ReadBytes(
-                1 + 1 + 1  // Record Length + Attributes + Timestamp Delta
-                + 1 + 1 + 1 // Offset Delta + Key Length + Key
+                1 + 1 + 1 + 1 // Record Length + Attributes + Timestamp Delta + Offset Delta
             );
+
+            reader.ReadByte(); // key length
+            // reader.ReadBytes(keyLength); // Key
 
             var valueLength = reader.ReadByte();
 
