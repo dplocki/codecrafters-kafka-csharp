@@ -8,14 +8,13 @@ internal class DescribeTopicPartitions : IModule
     public byte[] Respond(RequestMessage requestMessage)
     {
         var topics = LoadTopics();
-
         var topicArrayLength = requestMessage.RequestReader.Read8Bits() - 1;
         var requestedTopics = new ServerResponseDescribeTopicPartitionsMessageTopic[topicArrayLength];
 
         for (var i = 0; i < topicArrayLength; i++)
         {
             var topicName = requestMessage.RequestReader.ReadCompactString();
-            var loadedTopic = topics.FirstOrDefault(topic => topic.Name == topicName, null);
+            var loadedTopic = topics.FirstOrDefault(topic => topic!.Name == topicName, null);
 
             requestedTopics[i].Name = topicName;
             requestedTopics[i].Error = (short)(loadedTopic == null ? UNKNOWN_TOPIC_OR_PARTITION : 0);
@@ -104,7 +103,7 @@ struct ServerResponseDescribeTopicPartitionsMessage
 {
     public int CorrelationId;
 
-    public ServerResponseDescribeTopicPartitionsMessageTopic[] Topics;
+    public required ServerResponseDescribeTopicPartitionsMessageTopic[] Topics;
 
     public readonly byte[] ToMessage()
     {
