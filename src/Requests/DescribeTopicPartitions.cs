@@ -43,54 +43,57 @@ internal class DescribeTopicPartitions : IModule
         var stream = File.OpenRead(CLUSTER_METADATA_PATH);
         var reader = new BinaryReader(stream);
 
-        reader.ReadBytes(8); // Base Offset
-        reader.ReadBytes(4); // Batch Length
-        reader.ReadBytes(4); // Partition Leader Epoch
-        reader.ReadBytes(1); // Magic Byte
-        reader.ReadBytes(4); // CRC
-        reader.ReadBytes(2); // Attributes
-        reader.ReadBytes(4); // Last Offset Delta
-        reader.ReadBytes(8); // First Timestamp
-        reader.ReadBytes(8); // Max Timestamp
-        reader.ReadBytes(8); // Producer ID
-        reader.ReadBytes(2); // Producer Epoch
-        reader.ReadBytes(4); // Base Sequence
+        while(reader.BaseStream.Position < reader.BaseStream.Length)
+        {
+            reader.ReadBytes(8); // Base Offset
+            reader.ReadBytes(4); // Batch Length
+            reader.ReadBytes(4); // Partition Leader Epoch
+            reader.ReadBytes(1); // Magic Byte
+            reader.ReadBytes(4); // CRC
+            reader.ReadBytes(2); // Attributes
+            reader.ReadBytes(4); // Last Offset Delta
+            reader.ReadBytes(8); // First Timestamp
+            reader.ReadBytes(8); // Max Timestamp
+            reader.ReadBytes(8); // Producer ID
+            reader.ReadBytes(2); // Producer Epoch
+            reader.ReadBytes(4); // Base Sequence
 
-        var recordsCountBytes = reader.ReadBytes(4);
-        var recordsCountInt = (recordsCountBytes[0] << 24) | (recordsCountBytes[1] << 16) | (recordsCountBytes[2] << 8) | recordsCountBytes[3];
+            var recordsCountBytes = reader.ReadBytes(4);
+            var recordsCountInt = (recordsCountBytes[0] << 24) | (recordsCountBytes[1] << 16) | (recordsCountBytes[2] << 8) | recordsCountBytes[3];
 
-        for(var indexRecord = 0; indexRecord < recordsCountInt; indexRecord++) {
-            reader.ReadBytes(
-                1 + 1 + 1 + 1 // Record Length + Attributes + Timestamp Delta + Offset Delta
-            );
+            for(var indexRecord = 0; indexRecord < recordsCountInt; indexRecord++) {
+                reader.ReadBytes(
+                    1 + 1 + 1 + 1 // Record Length + Attributes + Timestamp Delta + Offset Delta
+                );
 
-            reader.ReadByte(); // key length
-            // reader.ReadBytes(keyLength); // Key
+                reader.ReadByte(); // key length
+                // reader.ReadBytes(keyLength); // Key
 
-            var valueLength = reader.ReadByte();
+                var valueLength = reader.ReadByte();
 
-            reader.ReadBytes(1); //  Frame Version
-            var valueType = reader.ReadByte();
-            if (valueType == 2) // Topic Record
-            {
-                reader.ReadBytes(1); // Version
-                var nameLength = reader.ReadByte();
-                var topicName = Encoding.UTF8.GetString(reader.ReadBytes(nameLength));
-                var guid = new Guid(reader.ReadBytes(16));
-                reader.ReadByte(); // Tagged Fields Count
-
-                result.Add(new DescribeTopic
+                reader.ReadBytes(1); //  Frame Version
+                var valueType = reader.ReadByte();
+                if (valueType == 2) // Topic Record
                 {
-                    Name = topicName,
-                    UUID = guid,
-                });
-            }
-            else
-            {
-                reader.ReadBytes(valueLength - 2); // Length - Frame Version + Value Type
-            }
+                    reader.ReadBytes(1); // Version
+                    var nameLength = reader.ReadByte();
+                    var topicName = Encoding.UTF8.GetString(reader.ReadBytes(nameLength));
+                    var guid = new Guid(reader.ReadBytes(16));
+                    reader.ReadByte(); // Tagged Fields Count
 
-            reader.ReadBytes(1); //  Headers Array Count
+                    result.Add(new DescribeTopic
+                    {
+                        Name = topicName,
+                        UUID = guid,
+                    });
+                }
+                else
+                {
+                    reader.ReadBytes(valueLength - 2); // Length - Frame Version + Value Type
+                }
+
+                reader.ReadBytes(1); //  Headers Array Count
+            }
         }
 
         return result;
