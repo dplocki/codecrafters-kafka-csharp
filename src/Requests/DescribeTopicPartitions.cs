@@ -70,7 +70,7 @@ internal class DescribeTopicPartitions : IModule
                 // reader.ReadBytes(keyLength); // Key
 
                 var valueLength = reader.ReadByte();
-                if (valueLength != 0) {
+                if (valueLength >= 4) {
                     reader.ReadBytes(1); //  Frame Version
                     var valueType = reader.ReadByte();
                     if (valueType == 2) // Topic Record
@@ -91,6 +91,8 @@ internal class DescribeTopicPartitions : IModule
                     {
                         reader.ReadBytes(valueLength - 2); // Length - Frame Version + Value Type
                     }
+                } else {
+                    reader.ReadBytes(valueLength);
                 }
 
                 reader.ReadBytes(1); //  Headers Array Count
