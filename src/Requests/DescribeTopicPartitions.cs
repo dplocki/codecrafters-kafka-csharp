@@ -70,26 +70,27 @@ internal class DescribeTopicPartitions : IModule
                 // reader.ReadBytes(keyLength); // Key
 
                 var valueLength = reader.ReadByte();
-
-                reader.ReadBytes(1); //  Frame Version
-                var valueType = reader.ReadByte();
-                if (valueType == 2) // Topic Record
-                {
-                    reader.ReadBytes(1); // Version
-                    var nameLength = reader.ReadByte();
-                    var topicName = Encoding.UTF8.GetString(reader.ReadBytes(nameLength));
-                    var guid = new Guid(reader.ReadBytes(16));
-                    reader.ReadByte(); // Tagged Fields Count
-
-                    result.Add(new DescribeTopic
+                if (valueLength != 0) {
+                    reader.ReadBytes(1); //  Frame Version
+                    var valueType = reader.ReadByte();
+                    if (valueType == 2) // Topic Record
                     {
-                        Name = topicName,
-                        UUID = guid,
-                    });
-                }
-                else
-                {
-                    reader.ReadBytes(valueLength - 2); // Length - Frame Version + Value Type
+                        reader.ReadBytes(1); // Version
+                        var nameLength = reader.ReadByte();
+                        var topicName = Encoding.UTF8.GetString(reader.ReadBytes(nameLength));
+                        var guid = new Guid(reader.ReadBytes(16));
+                        reader.ReadByte(); // Tagged Fields Count
+
+                        result.Add(new DescribeTopic
+                        {
+                            Name = topicName,
+                            UUID = guid,
+                        });
+                    }
+                    else
+                    {
+                        reader.ReadBytes(valueLength - 2); // Length - Frame Version + Value Type
+                    }
                 }
 
                 reader.ReadBytes(1); //  Headers Array Count
