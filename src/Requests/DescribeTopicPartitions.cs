@@ -71,7 +71,7 @@ internal class DescribeTopicPartitions : IModule
 
                 var valueLength = reader.ReadByte();
                 if (valueLength >= 4) {
-                    reader.ReadBytes(1); //  Frame Version
+                    reader.ReadByte(); //  Frame Version
                     var valueType = reader.ReadByte();
                     if (valueType == 2) // Topic Record
                     {
@@ -80,6 +80,7 @@ internal class DescribeTopicPartitions : IModule
                         var topicName = Encoding.UTF8.GetString(reader.ReadBytes(nameLength));
                         var guid = new Guid(reader.ReadBytes(16));
                         reader.ReadByte(); // Tagged Fields Count
+                        reader.ReadBytes(valueLength - 1 - 1 - 1 - 1 - nameLength - 16 - 1); // Length - Frame Version - Value Type - Version - Name Length - Name - UUID - Tagged Fields Count
 
                         result.Add(new DescribeTopic
                         {
@@ -89,7 +90,7 @@ internal class DescribeTopicPartitions : IModule
                     }
                     else
                     {
-                        reader.ReadBytes(valueLength - 2); // Length - Frame Version + Value Type
+                        reader.ReadBytes(valueLength - 2); // Length - (Frame Version + Value Type)
                     }
                 } else {
                     reader.ReadBytes(valueLength);
