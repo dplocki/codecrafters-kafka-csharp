@@ -69,7 +69,7 @@ internal class DescribeTopicPartitions : IModule
                 reader.ReadByte(); // key length
                 // reader.ReadBytes(keyLength); // Key
 
-                var valueLength = reader.ReadByte();
+                var valueLength = DecodeZigZag(reader.ReadByte());
                 if (valueLength >= 4) {
                     reader.ReadByte(); //  Frame Version
                     var valueType = reader.ReadByte();
@@ -101,6 +101,11 @@ internal class DescribeTopicPartitions : IModule
         }
 
         return result;
+    }
+
+    private static int DecodeZigZag(int n)
+    {
+        return (n >> 1) ^ -(n & 1);
     }
 }
 
