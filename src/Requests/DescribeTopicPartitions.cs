@@ -66,8 +66,10 @@ internal class DescribeTopicPartitions : IModule
                     1 + 1 + 1 + 1 // Record Length + Attributes + Timestamp Delta + Offset Delta
                 );
 
-                reader.ReadByte(); // key length
-                // reader.ReadBytes(keyLength); // Key
+                var keyLength = DecodeZigZag(reader.ReadByte());
+                if (keyLength != -1) {
+                    reader.ReadBytes(keyLength); // Key
+                }
 
                 var valueLength = DecodeZigZag(reader.ReadByte());
                 if (valueLength >= 4) {
@@ -75,7 +77,7 @@ internal class DescribeTopicPartitions : IModule
                     var valueType = reader.ReadByte();
                     if (valueType == 2) // Topic Record
                     {
-                        reader.ReadBytes(1); // Version
+                        reader.ReadByte(); // Version
                         var nameLength = reader.ReadByte();
                         var topicName = Encoding.UTF8.GetString(reader.ReadBytes(nameLength));
                         var guid = new Guid(reader.ReadBytes(16));
