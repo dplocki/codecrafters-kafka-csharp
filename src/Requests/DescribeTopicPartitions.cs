@@ -78,7 +78,7 @@ internal class DescribeTopicPartitions : IModule
                     if (valueType == 2) // Topic Record
                     {
                         reader.ReadByte(); // Version
-                        var nameLength = reader.ReadByte();
+                        var nameLength = reader.ReadByte() - 1;
                         var topicName = Encoding.UTF8.GetString(reader.ReadBytes(nameLength));
                         var guid = new Guid(reader.ReadBytes(16));
                         reader.ReadByte(); // Tagged Fields Count
