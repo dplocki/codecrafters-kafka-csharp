@@ -62,17 +62,17 @@ internal class DescribeTopicPartitions : IModule
             var recordsCountInt = (recordsCountBytes[0] << 24) | (recordsCountBytes[1] << 16) | (recordsCountBytes[2] << 8) | recordsCountBytes[3];
 
             for(var indexRecord = 0; indexRecord < recordsCountInt; indexRecord++) {
+                DecodeVarInt(reader); // Record Length
                 reader.ReadBytes(
-                    1 + 1 + 1 + 1 // Record Length + Attributes + Timestamp Delta + Offset Delta
+                    1 + 1 + 1 // Attributes + Timestamp Delta + Offset Delta
                 );
 
-                var keyLength = DecodeZigZag(reader.ReadByte());
+                var keyLength = DecodeVarInt(reader);
                 if (keyLength != -1) {
                     reader.ReadBytes(keyLength); // Key
                 }
 
-                var valueLengthBytes = reader.ReadBytes(2);
-                var valueLength = DecodeZigZag((valueLengthBytes[0] << 8) | valueLengthBytes[0]);
+                var valueLength = DecodeVarInt(reader);
                 if (valueLength >= 4) {
                     reader.ReadByte(); //  Frame Version
                     var valueType = reader.ReadByte();
@@ -110,9 +110,21 @@ internal class DescribeTopicPartitions : IModule
         return result;
     }
 
-    private static int DecodeZigZag(int n)
+    private static int DecodeVarInt(BinaryReader reader)
     {
-        return (n >> 1) ^ -(n & 1);
+        int result = 0;
+        int shift = 0;
+        byte currentByte;
+
+        do
+        {
+            currentByte = reader.ReadByte();
+            result |= (currentByte & 0x7F) << shift;
+            shift += 7;
+        }
+        while ((currentByte & 0x80) != 0);
+
+        return (result >> 1) ^ -(result & 1);
     }
 }
 
