@@ -82,7 +82,10 @@ internal class DescribeTopicPartitions : IModule
                         var topicName = Encoding.UTF8.GetString(reader.ReadBytes(nameLength));
                         var guid = new Guid(reader.ReadBytes(16));
                         reader.ReadByte(); // Tagged Fields Count
-                        reader.ReadBytes(valueLength - 1 - 1 - 1 - 1 - nameLength - 16 - 1); // Length - Frame Version - Value Type - Version - Name Length - Name - UUID - Tagged Fields Count
+                        reader.ReadBytes(valueLength // Length
+                             - 1 - 1 - 1             // - Frame Version - Value Type - Version
+                             - 1 - nameLength        // - Name Length - Name
+                             - 16 - 1);              // - UUID - Tagged Fields Count Frame
 
                         result.Add(new DescribeTopic
                         {
