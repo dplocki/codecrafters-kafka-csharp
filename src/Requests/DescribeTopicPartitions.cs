@@ -71,7 +71,8 @@ internal class DescribeTopicPartitions : IModule
                     reader.ReadBytes(keyLength); // Key
                 }
 
-                var valueLength = DecodeZigZag(reader.ReadByte());
+                var valueLengthBytes = reader.ReadBytes(2);
+                var valueLength = DecodeZigZag((valueLengthBytes[0] << 8) | valueLengthBytes[0]);
                 if (valueLength >= 4) {
                     reader.ReadByte(); //  Frame Version
                     var valueType = reader.ReadByte();
@@ -82,16 +83,17 @@ internal class DescribeTopicPartitions : IModule
                         var topicName = Encoding.UTF8.GetString(reader.ReadBytes(nameLength));
                         var guid = new Guid(reader.ReadBytes(16));
                         reader.ReadByte(); // Tagged Fields Count
-                        reader.ReadBytes(valueLength // Length
-                             - 1 - 1 - 1             // - Frame Version - Value Type - Version
-                             - 1 - nameLength        // - Name Length - Name
-                             - 16 - 1);              // - UUID - Tagged Fields Count Frame
 
                         result.Add(new DescribeTopic
                         {
                             Name = topicName,
                             UUID = guid,
                         });
+
+                        reader.ReadBytes(valueLength // Length
+                             - 1 - 1 - 1             // - Frame Version - Value Type - Version
+                             - 1 - nameLength        // - Name Length - Name
+                             - 16 - 1);              // - UUID - Tagged Fields Count Frame
                     }
                     else
                     {
