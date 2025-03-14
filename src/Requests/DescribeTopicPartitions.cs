@@ -88,6 +88,7 @@ internal class DescribeTopicPartitions : IModule
                         {
                             Name = topicName,
                             UUID = guid,
+                            Partitions = [],
                         });
 
                         reader.ReadBytes(valueLength // Length
@@ -178,4 +179,19 @@ class DescribeTopic
     public required string Name;
 
     public Guid UUID;
+
+    public required IList<DescribeTopicPartition> Partitions;
+}
+
+class DescribeTopicPartition
+{
+    public int PartitionId;
+
+    public int LeaderId;
+
+    public int[] ReplicaIds;
+
+    public int[] InSyncReplicaIds;
+
+    public int[] OfflineReplicaIds;
 }
