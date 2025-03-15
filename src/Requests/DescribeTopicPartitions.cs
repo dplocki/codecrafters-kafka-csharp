@@ -20,6 +20,7 @@ internal class DescribeTopicPartitions : IModule
                 Name = topicName,
                 Error = (short)(loadedTopic == null ? UNKNOWN_TOPIC_OR_PARTITION : 0),
                 UUID = loadedTopic?.UUID ?? Guid.Empty,
+                Partitions = [],
             };
 
             requestedTopics[i] = topicObject;
@@ -68,12 +69,14 @@ internal class DescribeTopicPartitions : IModule
                 );
 
                 var keyLength = DecodeVarInt(reader);
-                if (keyLength != -1) {
+                if (keyLength != -1)
+                {
                     reader.ReadBytes(keyLength); // Key
                 }
 
                 var valueLength = DecodeVarInt(reader);
-                if (valueLength >= 4) {
+                if (valueLength >= 4)
+                {
                     reader.ReadByte(); //  Frame Version
                     var valueType = reader.ReadByte();
                     if (valueType == 2) // Topic Record
@@ -88,7 +91,6 @@ internal class DescribeTopicPartitions : IModule
                         {
                             Name = topicName,
                             UUID = guid,
-                            Partitions = [],
                         });
 
                         reader.ReadBytes(valueLength // Length
@@ -96,11 +98,17 @@ internal class DescribeTopicPartitions : IModule
                              - 1 - nameLength        // - Name Length - Name
                              - 16 - 1);              // - UUID - Tagged Fields Count Frame
                     }
+                    else if (valueType == 3) // Partition Record
+                    {
+                        reader.ReadBytes(valueLength - 2);
+                    }
                     else
                     {
                         reader.ReadBytes(valueLength - 2); // Length - (Frame Version + Value Type)
                     }
-                } else {
+                }
+                else
+                {
                     reader.ReadBytes(valueLength);
                 }
 
@@ -136,6 +144,8 @@ class ServerResponseDescribeTopicPartitionsMessageTopic
     public required string Name;
 
     public Guid UUID;
+
+    public required IList<DescribeTopicPartition> Partitions;
 }
 
 struct ServerResponseDescribeTopicPartitionsMessage
@@ -161,7 +171,7 @@ struct ServerResponseDescribeTopicPartitionsMessage
 
             builder.AddByte(0); // As internal
 
-            builder.AddByte(1); // Partitions Array Length
+            builder.AddByte((byte)(topic.Partitions.Count + 1)); // Partitions Array Length
 
             builder.Add4Bytes(0); // Authorized Operations
             builder.AddByte(0); // Tag buffer
@@ -179,8 +189,6 @@ class DescribeTopic
     public required string Name;
 
     public Guid UUID;
-
-    public required IList<DescribeTopicPartition> Partitions;
 }
 
 class DescribeTopicPartition
