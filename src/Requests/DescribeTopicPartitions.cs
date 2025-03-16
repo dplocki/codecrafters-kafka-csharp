@@ -1,13 +1,15 @@
-using System.Text;
-
 internal class DescribeTopicPartitions : IModule
 {
-    const string CLUSTER_METADATA_PATH = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
     const short UNKNOWN_TOPIC_OR_PARTITION = 3;
+    private readonly IList<DescribeTopic> topics;
+
+    public DescribeTopicPartitions(ClusterMetadata clusterMetadata)
+    {
+        topics = clusterMetadata.Topics;
+    }
 
     public byte[] Respond(RequestMessage requestMessage)
     {
-        var topics = LoadTopics();
         var topicArrayLength = requestMessage.RequestReader.Read8Bits() - 1;
         var requestedTopics = new ServerResponseDescribeTopicPartitionsMessageTopic[topicArrayLength];
 
@@ -35,105 +37,6 @@ internal class DescribeTopicPartitions : IModule
         };
 
         return result.ToMessage();
-    }
-
-    private IList<DescribeTopic> LoadTopics()
-    {
-        var result = new List<DescribeTopic>();
-        // open the CLUSTER_METADATA_PATH file as stream
-        var stream = File.OpenRead(CLUSTER_METADATA_PATH);
-        var reader = new BinaryReader(stream);
-
-        while(reader.BaseStream.Position < reader.BaseStream.Length)
-        {
-            reader.ReadBytes(8); // Base Offset
-            reader.ReadBytes(4); // Batch Length
-            reader.ReadBytes(4); // Partition Leader Epoch
-            reader.ReadBytes(1); // Magic Byte
-            reader.ReadBytes(4); // CRC
-            reader.ReadBytes(2); // Attributes
-            reader.ReadBytes(4); // Last Offset Delta
-            reader.ReadBytes(8); // First Timestamp
-            reader.ReadBytes(8); // Max Timestamp
-            reader.ReadBytes(8); // Producer ID
-            reader.ReadBytes(2); // Producer Epoch
-            reader.ReadBytes(4); // Base Sequence
-
-            var recordsCountBytes = reader.ReadBytes(4);
-            var recordsCountInt = (recordsCountBytes[0] << 24) | (recordsCountBytes[1] << 16) | (recordsCountBytes[2] << 8) | recordsCountBytes[3];
-
-            for(var indexRecord = 0; indexRecord < recordsCountInt; indexRecord++) {
-                DecodeVarInt(reader); // Record Length
-                reader.ReadBytes(
-                    1 + 1 + 1 // Attributes + Timestamp Delta + Offset Delta
-                );
-
-                var keyLength = DecodeVarInt(reader);
-                if (keyLength != -1)
-                {
-                    reader.ReadBytes(keyLength); // Key
-                }
-
-                var valueLength = DecodeVarInt(reader);
-                if (valueLength >= 4)
-                {
-                    reader.ReadByte(); //  Frame Version
-                    var valueType = reader.ReadByte();
-                    if (valueType == 2) // Topic Record
-                    {
-                        reader.ReadByte(); // Version
-                        var nameLength = reader.ReadByte() - 1;
-                        var topicName = Encoding.UTF8.GetString(reader.ReadBytes(nameLength));
-                        var guid = new Guid(reader.ReadBytes(16));
-                        reader.ReadByte(); // Tagged Fields Count
-
-                        result.Add(new DescribeTopic
-                        {
-                            Name = topicName,
-                            UUID = guid,
-                        });
-
-                        reader.ReadBytes(valueLength // Length
-                             - 1 - 1 - 1             // - Frame Version - Value Type - Version
-                             - 1 - nameLength        // - Name Length - Name
-                             - 16 - 1);              // - UUID - Tagged Fields Count Frame
-                    }
-                    else if (valueType == 3) // Partition Record
-                    {
-                        reader.ReadBytes(valueLength - 2);
-                    }
-                    else
-                    {
-                        reader.ReadBytes(valueLength - 2); // Length - (Frame Version + Value Type)
-                    }
-                }
-                else
-                {
-                    reader.ReadBytes(valueLength);
-                }
-
-                reader.ReadBytes(1); //  Headers Array Count
-            }
-        }
-
-        return result;
-    }
-
-    private static int DecodeVarInt(BinaryReader reader)
-    {
-        int result = 0;
-        int shift = 0;
-        byte currentByte;
-
-        do
-        {
-            currentByte = reader.ReadByte();
-            result |= (currentByte & 0x7F) << shift;
-            shift += 7;
-        }
-        while ((currentByte & 0x80) != 0);
-
-        return (result >> 1) ^ -(result & 1);
     }
 }
 
@@ -184,14 +87,14 @@ struct ServerResponseDescribeTopicPartitionsMessage
     }
 }
 
-class DescribeTopic
+public class DescribeTopic
 {
     public required string Name;
 
     public Guid UUID;
 }
 
-class DescribeTopicPartition
+public class DescribeTopicPartition
 {
     public int PartitionId;
 

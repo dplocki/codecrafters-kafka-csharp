@@ -2,12 +2,12 @@ public class RequestFactory
 {
     private readonly Dictionary<int, IModule> modules;
 
-    public RequestFactory()
+    public RequestFactory(ClusterMetadata clusterMetadata)
     {
         modules = new Dictionary<int, IModule>
         {
             { 18, new ApiVersions() },
-            { 75, new DescribeTopicPartitions() }
+            { 75, new DescribeTopicPartitions(clusterMetadata) }
         };
     }
 

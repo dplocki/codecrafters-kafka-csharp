@@ -3,7 +3,8 @@ using System.Net.Sockets;
 
 Console.WriteLine("Server started");
 
-var requestFactory = new RequestFactory();
+var clusterMetadata = new ClusterMetadata();
+var requestFactory = new RequestFactory(clusterMetadata);
 
 using var server = new TcpListener(IPAddress.Any, 9092);
 server.Start();
