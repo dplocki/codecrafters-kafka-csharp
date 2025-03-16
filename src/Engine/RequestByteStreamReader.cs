@@ -1,12 +1,12 @@
 using System.Buffers.Binary;
 using System.Text;
 
-public class RequestReader
+public class RequestByteStreamReader
 {
     private readonly byte[] messageBuffer;
     private int index = 0;
 
-    public RequestReader(Stream stream)
+    public RequestByteStreamReader(Stream stream)
     {
         var sizeBuffer = new byte[4];
         stream.ReadExactly(sizeBuffer);

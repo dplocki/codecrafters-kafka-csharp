@@ -13,7 +13,7 @@ public class RequestFactory
 
     public RequestMessage ParseRequest(Stream stream)
     {
-        var requestReader = new RequestReader(stream);
+        var requestReader = new RequestByteStreamReader(stream);
         var result = new RequestMessage()
         {
             ApiKey = requestReader.Read16Bites(),
