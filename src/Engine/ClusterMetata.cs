@@ -73,7 +73,43 @@ public class ClusterMetadata
                     }
                     else if (valueType == 3) // Partition Record
                     {
-                        reader.ReadBytes(valueLength - 2);
+                        reader.ReadByte(); // Frame Version
+                        reader.ReadByte(); // Value Type
+                        reader.ReadByte(); // Version
+
+                        new Guid(reader.ReadBytes(16));
+
+                        var replicaArraylength = reader.ReadByte() - 1;
+                        for (var indexReplica = 0; indexReplica < replicaArraylength; indexReplica++)
+                        {
+                            reader.ReadBytes(4); // Replica
+                        }
+
+                        var removeArrayLength = reader.ReadByte() - 1;
+                        for (var indexReplica = 0; indexReplica < removeArrayLength; indexReplica++)
+                        {
+                            reader.ReadBytes(4); // Replica
+                        }
+
+                        var addedArrayLength = reader.ReadByte() - 1;
+                        for (var indexReplica = 0; indexReplica < addedArrayLength; indexReplica++)
+                        {
+                            reader.ReadBytes(4); // Replica
+                        }
+
+                        reader.ReadBytes(4); // Leader
+                        reader.ReadBytes(4); // Leader Epoch
+                        reader.ReadBytes(4); // Partition Epoch
+                        reader.ReadByte(); // Length of Directories array
+
+                        var directoriesArrayLength = reader.ReadByte() - 1;
+                        for (var indexReplica = 0; indexReplica < directoriesArrayLength; indexReplica++)
+                        {
+                            reader.ReadBytes(16); // Replica
+                        }
+
+                        reader.ReadByte(); // Tagged Fields Count
+                        reader.ReadByte(); // Headers Array Count
                     }
                     else
                     {
