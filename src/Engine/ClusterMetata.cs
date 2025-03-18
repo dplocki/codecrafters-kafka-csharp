@@ -132,7 +132,7 @@ public class ClusterMetadata
             }
         }
 
-        return topics;
+        return (topics, partitions);
     }
 
     private static int DecodeVarInt(BinaryReader reader)
