@@ -97,6 +97,7 @@ public class DescribeTopic
 public class DescribeTopicPartition
 {
     public int PartitionId;
+    public Guid UUID;
 
     public int LeaderId;
 

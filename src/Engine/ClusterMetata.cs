@@ -79,7 +79,7 @@ public class ClusterMetadata
                         reader.ReadByte(); // Value Type
                         reader.ReadByte(); // Version
 
-                        new Guid(reader.ReadBytes(16));
+                        var guid = new Guid(reader.ReadBytes(16));
 
                         var replicaArraylength = reader.ReadByte() - 1;
                         for (var indexReplica = 0; indexReplica < replicaArraylength; indexReplica++)
@@ -112,6 +112,11 @@ public class ClusterMetadata
 
                         reader.ReadByte(); // Tagged Fields Count
                         reader.ReadByte(); // Headers Array Count
+
+                        partitions.Add(new DescribeTopicPartition
+                        {
+                            UUID = guid,
+                        });
                     }
                     else
                     {
