@@ -5,15 +5,17 @@ public class ClusterMetadata
     const string CLUSTER_METADATA_PATH = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
 
     public IList<DescribeTopic> Topics { get; private set; }
+    public IList<DescribeTopicPartition> Partitions { get; private set; }
 
     public ClusterMetadata()
     {
-        Topics = LoadTopics(CLUSTER_METADATA_PATH);
+        (Topics, Partitions) = LoadTopics(CLUSTER_METADATA_PATH);
     }
 
-    private IList<DescribeTopic> LoadTopics(string clusterMetadataLoaderPath)
+    private (IList<DescribeTopic>, IList<DescribeTopicPartition>) LoadTopics(string clusterMetadataLoaderPath)
     {
-        var result = new List<DescribeTopic>();
+        var topics = new List<DescribeTopic>();
+        var partitions = new List<DescribeTopicPartition>();
         var stream = File.OpenRead(clusterMetadataLoaderPath);
         var reader = new BinaryReader(stream);
 
@@ -60,7 +62,7 @@ public class ClusterMetadata
                         var guid = new Guid(reader.ReadBytes(16));
                         reader.ReadByte(); // Tagged Fields Count
 
-                        result.Add(new DescribeTopic
+                        topics.Add(new DescribeTopic
                         {
                             Name = topicName,
                             UUID = guid,
@@ -125,7 +127,7 @@ public class ClusterMetadata
             }
         }
 
-        return result;
+        return topics;
     }
 
     private static int DecodeVarInt(BinaryReader reader)
