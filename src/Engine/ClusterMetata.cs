@@ -4,12 +4,15 @@ public class ClusterMetadata
 {
     const string CLUSTER_METADATA_PATH = "/tmp/kraft-combined-logs/__cluster_metadata-0/00000000000000000000.log";
 
-    public IList<DescribeTopic> Topics { get; private set; }
-    public IList<DescribeTopicPartition> Partitions { get; private set; }
+    public IDictionary<string, DescribeTopic> Topics { get; private set; }
+    public IDictionary<Guid, DescribeTopicPartition> Partitions { get; private set; }
 
     public ClusterMetadata()
     {
-        (Topics, Partitions) = LoadTopics(CLUSTER_METADATA_PATH);
+        var (topics, partitions) = LoadTopics(CLUSTER_METADATA_PATH);
+
+        Topics = topics.ToDictionary(topic => topic.Name, topic => topic);
+        Partitions = partitions.ToDictionary(partition => partition.UUID, partition => partition);
     }
 
     private (IList<DescribeTopic>, IList<DescribeTopicPartition>) LoadTopics(string clusterMetadataLoaderPath)
