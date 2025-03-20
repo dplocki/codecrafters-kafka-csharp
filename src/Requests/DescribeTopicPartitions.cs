@@ -1,28 +1,36 @@
 internal class DescribeTopicPartitions : IModule
 {
     const short UNKNOWN_TOPIC_OR_PARTITION = 3;
-    private readonly IList<DescribeTopic> topics;
+
+    private readonly ClusterMetadata clusterMetadata;
 
     public DescribeTopicPartitions(ClusterMetadata clusterMetadata)
     {
-        topics = clusterMetadata.Topics;
+        this.clusterMetadata = clusterMetadata;
     }
+
 
     public byte[] Respond(RequestMessage requestMessage)
     {
         var topicArrayLength = requestMessage.RequestReader.Read8Bits() - 1;
         var requestedTopics = new ServerResponseDescribeTopicPartitionsMessageTopic[topicArrayLength];
 
+
         for (var i = 0; i < topicArrayLength; i++)
         {
             var topicName = requestMessage.RequestReader.ReadCompactString();
-            var loadedTopic = topics.FirstOrDefault(topic => topic!.Name == topicName, null);
+
+            clusterMetadata.Topics.TryGetValue(topicName, out var topic);
+            var UUID = topic?.UUID ?? Guid.Empty;
+            clusterMetadata.Partitions.TryGetValue(UUID, out var partition);
+
             var topicObject = new ServerResponseDescribeTopicPartitionsMessageTopic()
             {
+
                 Name = topicName,
-                Error = (short)(loadedTopic == null ? UNKNOWN_TOPIC_OR_PARTITION : 0),
-                UUID = loadedTopic?.UUID ?? Guid.Empty,
-                Partitions = [],
+                Error = (short)(topic == null ? UNKNOWN_TOPIC_OR_PARTITION : 0),
+                UUID = UUID,
+                Partitions = partition != null ? [ partition ] : [],
             };
 
             requestedTopics[i] = topicObject;
