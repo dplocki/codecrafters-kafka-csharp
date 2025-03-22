@@ -109,9 +109,9 @@ public class DescribeTopicPartition
 
     public int LeaderId;
 
-    public int[] ReplicaIds;
+    public required int[] ReplicaIds;
 
-    public int[] InSyncReplicaIds;
+    public required int[] InSyncReplicaIds;
 
-    public int[] OfflineReplicaIds;
+    public required int[] OfflineReplicaIds;
 }

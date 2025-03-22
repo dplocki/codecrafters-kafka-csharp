@@ -119,6 +119,9 @@ public class ClusterMetadata
                         partitions.Add(new DescribeTopicPartition
                         {
                             UUID = guid,
+                            InSyncReplicaIds = [],
+                            ReplicaIds = [],
+                            OfflineReplicaIds = [],
                         });
                     }
                     else
