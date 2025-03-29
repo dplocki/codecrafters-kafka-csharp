@@ -78,9 +78,8 @@ public class ClusterMetadata
                     }
                     else if (valueType == 3) // Partition Record
                     {
-                        reader.ReadByte(); // Frame Version
-                        reader.ReadByte(); // Value Type
                         reader.ReadByte(); // Version
+                        reader.ReadBytes(4); // Partition ID
 
                         var guid = new Guid(reader.ReadBytes(16));
 
@@ -99,7 +98,7 @@ public class ClusterMetadata
                         var addedArrayLength = reader.ReadByte() - 1;
                         for (var indexReplica = 0; indexReplica < addedArrayLength; indexReplica++)
                         {
-                            reader.ReadBytes(4); // Replica
+                            reader.ReadBytes(1); // Replica
                         }
 
                         reader.ReadBytes(4); // Leader
