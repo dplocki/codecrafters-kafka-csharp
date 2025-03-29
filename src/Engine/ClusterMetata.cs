@@ -40,7 +40,8 @@ public class ClusterMetadata
             var recordsCountBytes = reader.ReadBytes(4);
             var recordsCountInt = (recordsCountBytes[0] << 24) | (recordsCountBytes[1] << 16) | (recordsCountBytes[2] << 8) | recordsCountBytes[3];
 
-            for(var indexRecord = 0; indexRecord < recordsCountInt; indexRecord++) {
+            for(var indexRecord = 0; indexRecord < recordsCountInt; indexRecord++)
+            {
                 DecodeVarInt(reader); // Record Length
                 reader.ReadBytes(
                     1 + 1 + 1 // Attributes + Timestamp Delta + Offset Delta
@@ -57,6 +58,7 @@ public class ClusterMetadata
                 {
                     reader.ReadByte(); //  Frame Version
                     var valueType = reader.ReadByte();
+
                     if (valueType == 2) // Topic Record
                     {
                         reader.ReadByte(); // Version
@@ -113,7 +115,6 @@ public class ClusterMetadata
                         }
 
                         reader.ReadByte(); // Tagged Fields Count
-                        reader.ReadByte(); // Headers Array Count
 
                         partitions.Add(new DescribeTopicPartition
                         {
@@ -133,7 +134,7 @@ public class ClusterMetadata
                     reader.ReadBytes(valueLength);
                 }
 
-                reader.ReadBytes(1); //  Headers Array Count
+                reader.ReadByte(); //  Headers Array Count
             }
         }
 
