@@ -12,7 +12,9 @@ public class ClusterMetadata
         var (topics, partitions) = LoadTopics(CLUSTER_METADATA_PATH);
 
         Topics = topics.ToDictionary(topic => topic.Name, topic => topic);
-        Partitions = partitions.ToDictionary(partition => partition.UUID, partition => partition);
+        Partitions = partitions
+            .DistinctBy(partition => partition.UUID)
+            .ToDictionary(partition => partition.UUID, partition => partition);
     }
 
     private (IList<DescribeTopic>, IList<DescribeTopicPartition>) LoadTopics(string clusterMetadataLoaderPath)
