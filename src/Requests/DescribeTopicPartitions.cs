@@ -84,6 +84,28 @@ struct ServerResponseDescribeTopicPartitionsMessage
 
             builder.AddByte((byte)(topic.Partitions.Count + 1)); // Partitions Array Length
 
+            foreach(var partition in topic.Partitions) {
+                builder.Add2Bytes(0); // Error
+                builder.Add4Bytes(partition.PartitionId);
+                builder.AddGuid(partition.UUID);
+                builder.Add4Bytes(partition.LeaderId);
+
+                builder.AddByte((byte)(partition.ReplicaIds.Length + 1)); // Replica Array Length
+                foreach (var replicaId in partition.ReplicaIds) {
+                    builder.Add4Bytes(replicaId);
+                }
+
+                builder.AddByte((byte)(partition.InSyncReplicaIds.Length + 1)); // In Sync Replica Array Length
+                foreach (var inSyncReplicaId in partition.InSyncReplicaIds) {
+                    builder.Add4Bytes(inSyncReplicaId);
+                }
+
+                builder.AddByte((byte)(partition.OfflineReplicaIds.Length + 1)); // Offline Replica Array Length
+                foreach (var offlineReplicaId in partition.OfflineReplicaIds) {
+                    builder.Add4Bytes(offlineReplicaId);
+                }
+            }
+
             builder.Add4Bytes(0); // Authorized Operations
             builder.AddByte(0); // Tag buffer
         }
