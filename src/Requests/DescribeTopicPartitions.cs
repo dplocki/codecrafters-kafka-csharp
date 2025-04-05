@@ -22,7 +22,7 @@ internal class DescribeTopicPartitions : IModule
 
             clusterMetadata.Topics.TryGetValue(topicName, out var topic);
             var UUID = topic?.UUID ?? Guid.Empty;
-            clusterMetadata.Partitions.TryGetValue(UUID, out var partition);
+            var partitions = clusterMetadata.Partitions.Where(p => p.UUID == UUID).ToArray();
 
             var topicObject = new ServerResponseDescribeTopicPartitionsMessageTopic()
             {
@@ -30,7 +30,7 @@ internal class DescribeTopicPartitions : IModule
                 Name = topicName,
                 Error = (short)(topic == null ? UNKNOWN_TOPIC_OR_PARTITION : 0),
                 UUID = UUID,
-                Partitions = partition != null ? [ partition ] : [],
+                Partitions = partitions,
             };
 
             requestedTopics[i] = topicObject;
