@@ -9,12 +9,10 @@ internal class DescribeTopicPartitions : IModule
         this.clusterMetadata = clusterMetadata;
     }
 
-
     public byte[] Respond(RequestMessage requestMessage)
     {
         var topicArrayLength = requestMessage.RequestReader.Read8Bits() - 1;
         var requestedTopics = new ServerResponseDescribeTopicPartitionsMessageTopic[topicArrayLength];
-
 
         for (var i = 0; i < topicArrayLength; i++)
         {
@@ -26,7 +24,6 @@ internal class DescribeTopicPartitions : IModule
 
             var topicObject = new ServerResponseDescribeTopicPartitionsMessageTopic()
             {
-
                 Name = topicName,
                 Error = (short)(topic == null ? UNKNOWN_TOPIC_OR_PARTITION : 0),
                 UUID = UUID,

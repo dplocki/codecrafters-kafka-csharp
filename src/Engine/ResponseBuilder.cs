@@ -47,7 +47,7 @@ class ResponseBuilder : IDisposable
 
     public ResponseBuilder AddString(string value)
     {
-        AddByte((byte)(value.Length + 1));
+        AddVarInt(value.Length + 1);
 
         foreach(var letter in value)
         {
@@ -67,6 +67,18 @@ class ResponseBuilder : IDisposable
         BinaryPrimitives.WriteInt32BigEndian(result.AsSpan(0, SizeOfSize), result.Length - SizeOfSize);
 
         return result;
+    }
+
+    private void AddVarInt(int value)
+    {
+        uint zigzagged = (uint)((value << 1) ^ (value >> 31));
+        while (zigzagged >= 0x80)
+        {
+            stream.WriteByte((byte)(zigzagged | 0x80));
+            zigzagged >>= 7;
+        }
+
+        stream.WriteByte((byte)zigzagged);
     }
 }
 
