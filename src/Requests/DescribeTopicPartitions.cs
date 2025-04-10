@@ -103,7 +103,7 @@ struct ServerResponseDescribeTopicPartitionsMessage
                 }
             }
 
-            builder.Add4Bytes(0); // Authorized Operations
+            builder.Add4Bytes(0x00000df8); // Authorized Operations
             builder.AddByte(0); // Tag buffer
         }
 
