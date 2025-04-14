@@ -34,6 +34,10 @@ public class RequestByteStreamReader
 
     public string ReadString() {
         var length = Read16Bites();
+        if (length == -1) {
+            return string.Empty;
+        }
+
         var value = messageBuffer.AsSpan(index, length);
 
         index += length;
